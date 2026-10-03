@@ -1,0 +1,995 @@
+<title>Lehrerplaner Sachsen</title>
+<meta name="theme-color" content="#3D6B8E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bitter:wght@600;700&display=swap">
+<style>
+/* Layout: App-Hülle. Ab 900px Seitenleiste links, darunter Leiste unten (Daumenreichweite). Farben aus dem PDF-Planer übernommen. */
+:root{
+  --bg:#F2F4F7;--surface:#FFFFFF;--ink:#2B2D42;--muted:#646B7E;--line:#DCE0E7;--soft-line:#ECEEF2;
+  --accent:#3D6B8E;--accent-ink:#FFFFFF;--accent-soft:#E3ECF3;
+  --ferien:#DDF0E4;--ferien-t:#2B7048;--feier:#F9E0DC;--feier-t:#AE4033;--frei:#FDF0D2;--frei-t:#855A0C;--we:#EAECF0;
+  --chalk:#2F4A3C;--chalk-t:#F2F5EF;--warn:#AE4033;--ok:#2B7048;
+  --f-display:"Bitter",Georgia,"Times New Roman",serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14171D;--surface:#1D2129;--ink:#E5E8EF;--muted:#9CA3B4;--line:#2F3541;--soft-line:#262B35;
+  --accent:#86B3D6;--accent-ink:#10202D;--accent-soft:#223448;
+  --ferien:#1B3527;--ferien-t:#86D0A4;--feier:#43221E;--feier-t:#F2A095;--frei:#3B2F17;--frei-t:#E6C06E;--we:#1A1E25;
+  --chalk:#28402F;--chalk-t:#E8EFE6;--warn:#F2A095;--ok:#86D0A4;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14171D;--surface:#1D2129;--ink:#E5E8EF;--muted:#9CA3B4;--line:#2F3541;--soft-line:#262B35;
+  --accent:#86B3D6;--accent-ink:#10202D;--accent-soft:#223448;
+  --ferien:#1B3527;--ferien-t:#86D0A4;--feier:#43221E;--feier-t:#F2A095;--frei:#3B2F17;--frei-t:#E6C06E;--we:#1A1E25;
+  --chalk:#28402F;--chalk-t:#E8EFE6;--warn:#F2A095;--ok:#86D0A4;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body);-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:1.55rem;line-height:1.2}
+h2{font-size:1.1rem}
+h3{font-size:1rem}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{min-height:100%}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav .brand{display:none}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;padding:8px 2px 7px;font-size:.72rem;color:var(--muted);cursor:pointer}
+.nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav button[aria-current="page"]{color:var(--accent);font-weight:700}
+main{padding-inline:16px;padding-block:18px 104px;max-width:1040px;margin-inline:auto}
+@media (min-width:900px){
+  .app{display:grid;grid-template-columns:210px minmax(0,1fr)}
+  .nav{position:sticky;top:0;height:100vh;flex-direction:column;border-top:0;border-right:1px solid var(--line);padding:20px 12px;gap:4px;bottom:auto}
+  .nav .brand{display:block;font-family:var(--f-display);font-weight:700;font-size:1.05rem;padding:0 10px 4px}
+  .nav .brand small{display:block;font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:.8rem;margin-top:2px}
+  .nav .sep{height:14px}
+  .nav button{flex:0;flex-direction:row;gap:10px;font-size:.95rem;padding:9px 10px;border-radius:8px;justify-content:flex-start}
+  .nav button[aria-current="page"]{background:var(--accent-soft)}
+  main{padding-inline:32px;padding-block:28px 48px}
+}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:16px}
+.head .sub{color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.ctrl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;line-height:1.2;min-height:38px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.btn.quiet{border-color:transparent;background:none;color:var(--accent)}
+.btn.danger{color:var(--warn)}
+.btn.sq{width:38px;padding:0;font-size:1.2rem}
+.btn:focus-visible,.nav button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.cal td button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=text],input[type=date],input[type=time],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:7px 9px;min-height:38px;width:100%}
+textarea{resize:vertical;min-height:70px;line-height:1.4}
+input.inline,textarea.inline{border-color:transparent;background:transparent;padding-inline:4px}
+input.inline:hover,textarea.inline:hover{border-color:var(--line)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.card > h2{margin-bottom:10px}
+.stack{display:grid;gap:14px}
+.cols{display:grid;gap:14px}
+.stack > *,.cols > *{min-width:0}
+@media (min-width:760px){.cols{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);align-items:start}}
+.pill{display:inline-block;border-radius:99px;padding:3px 11px;font-size:.85rem;font-weight:700}
+.st-schule{background:var(--accent-soft);color:var(--accent)}
+.st-ferien{background:var(--ferien);color:var(--ferien-t)}
+.st-feiertag{background:var(--feier);color:var(--feier-t)}
+.st-frei{background:var(--frei);color:var(--frei-t)}
+.st-wochenende{background:var(--we);color:var(--muted)}
+.note{background:var(--frei);color:var(--frei-t);border-radius:var(--r);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.note p{margin:0}
+.count{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.count b{font-family:var(--f-display);font-size:2rem;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.lessons{display:grid}
+.lesson{display:grid;grid-template-columns:44px minmax(0,1fr);gap:4px 10px;padding:10px 0;border-top:1px solid var(--soft-line)}
+.lesson:first-child{border-top:0;padding-top:2px}
+.lesson .n{font-family:var(--f-display);font-weight:700;font-size:1.15rem;line-height:1.1}
+.lesson .n small{display:block;font-family:var(--f-body);font-weight:400;font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.lesson .what{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.lesson .what strong{font-size:1.02rem}
+.lesson.empty{opacity:.55;padding-block:6px}
+.lesson textarea{min-height:52px;margin-top:4px}
+.tasks{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.tasks li{display:flex;align-items:center;gap:6px}
+.tasks li.done input[type=text]{text-decoration:line-through;color:var(--muted)}
+.tasks input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:1.1rem;width:32px;height:32px;border-radius:6px;flex:none}
+.x:hover{color:var(--warn);background:var(--feier)}
+.addrow{display:flex;gap:6px;margin-top:8px}
+.week{display:grid;gap:10px}
+@media (min-width:760px){.week{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.wday{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:grid;gap:6px;align-content:start;text-align:left;cursor:pointer}
+.wday:hover{border-color:var(--accent)}
+.wday.is-today{box-shadow:inset 0 0 0 2px var(--accent)}
+.wday .dh{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.wday .dh b{font-family:var(--f-display)}
+.wl{font-size:.88rem;display:grid;grid-template-columns:20px minmax(0,1fr);gap:4px;border-top:1px solid var(--soft-line);padding-top:5px}
+.wl .t{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;margin-bottom:14px;align-items:center}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px}
+.months{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.cal{width:100%;border-collapse:separate;border-spacing:2px;font-variant-numeric:tabular-nums;table-layout:fixed}
+.cal th{font-size:.7rem;color:var(--muted);font-weight:400}
+.cal td{padding:0}
+.cal td button{width:100%;aspect-ratio:1;max-width:100%;border:0;border-radius:6px;background:none;cursor:pointer;font-size:.85rem;position:relative;padding:0}
+.cal td button.s-ferien{background:var(--ferien);color:var(--ferien-t)}
+.cal td button.s-feiertag{background:var(--feier);color:var(--feier-t);font-weight:700}
+.cal td button.s-frei{background:var(--frei);color:var(--frei-t);font-weight:700}
+.cal td button.s-wochenende{background:var(--we);color:var(--muted)}
+.cal td button.today{box-shadow:inset 0 0 0 2px var(--accent);font-weight:700}
+.cal td button.has::after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;background:none;padding:9px 12px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--accent)}
+.list{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.kcard{text-align:left;cursor:pointer;display:grid;gap:4px}
+.kcard:hover{border-color:var(--accent)}
+.kcard b{font-family:var(--f-display);font-size:1.4rem}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.grid{border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:100%}
+table.grid th,table.grid td{border-bottom:1px solid var(--soft-line);padding:4px 6px;text-align:left;vertical-align:middle}
+table.grid th{font-size:.8rem;color:var(--muted);font-weight:700;white-space:nowrap}
+table.grid td.c,table.grid th.c{text-align:center}
+table.grid .sticky{position:sticky;left:0;background:var(--surface);z-index:1}
+table.grid input.g{width:3.4em;text-align:center;padding:5px 2px;min-height:34px}
+table.grid tfoot td{font-weight:700;border-bottom:0;padding-top:8px}
+.avg{font-weight:700;font-family:var(--f-display)}
+.srow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:6px;align-items:center;padding:3px 0;border-top:1px solid var(--soft-line)}
+.srow:first-child{border-top:0}
+.srow .nr{color:var(--muted);font-size:.85rem;text-align:right;font-variant-numeric:tabular-nums}
+.sfields{display:grid;gap:4px}
+@media (min-width:600px){.sfields{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)}}
+.anw{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 0;border-top:1px solid var(--soft-line)}
+.anw:first-child{border-top:0}
+.anw .state{min-width:150px;text-align:center}
+.anw .state.e{background:var(--frei);color:var(--frei-t);border-color:transparent}
+.anw .state.u{background:var(--feier);color:var(--feier-t);border-color:transparent}
+.anw .state.v{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.anw .tot{grid-column:2 / -1;font-size:.8rem;color:var(--muted);margin-top:-4px}
+.board{background:var(--chalk);color:var(--chalk-t);text-align:center;font-family:var(--f-display);letter-spacing:.2em;font-size:.85rem;padding:7px;border-radius:6px;margin-bottom:12px}
+.seats{display:grid;gap:6px}
+.seats select{font-size:.8rem;padding:6px 4px;min-height:44px;text-align:center}
+.seats select.taken{background:var(--accent-soft);border-color:transparent;font-weight:700}
+.menu{display:grid;gap:8px}
+.menu button{text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer}
+.menu button span{display:grid}
+.menu button small{color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chips button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 14px;cursor:pointer;min-height:38px}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.prow{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;padding:10px 0;border-top:1px solid var(--soft-line)}
+.prow:first-of-type{border-top:0}
+.pfields{display:grid;gap:6px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:700px){.pfields{grid-template-columns:1fr 1fr 1.2fr 1.4fr .8fr}}
+.pfields label{display:grid;gap:2px;font-size:.75rem;color:var(--muted)}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+@media (min-width:700px){.checks{grid-template-columns:1fr 1fr;column-gap:24px}}
+.checks label{display:flex;gap:8px;align-items:flex-start;padding:4px 0;cursor:pointer}
+.checks input{width:20px;height:20px;accent-color:var(--accent);flex:none;margin-top:1px}
+.steps{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.steps li{border-left:3px solid var(--accent-soft);padding-left:12px}
+.steps b{color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-variant-numeric:tabular-nums}
+.confirm{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.confirm span{color:var(--warn);font-weight:700}
+.form{display:grid;gap:8px}
+@media (min-width:600px){.form.row{grid-template-columns:2fr 1.3fr 1fr auto;align-items:end}}
+.form label{display:grid;gap:3px;font-size:.8rem;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:99px;font-size:.9rem;z-index:30}
+@media (min-width:900px){.toast{bottom:24px}}
+@media (prefers-reduced-motion:no-preference){.wday,.btn,.kcard{transition:border-color .15s}}
+</style>
+
+<div class="app">
+  <nav class="nav" id="nav" aria-label="Bereiche"></nav>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+"use strict";
+/* ---------------------------------------------------------- Kalender Sachsen 2026/27
+   Quelle: Schuljahrestermine Freistaat Sachsen (schule.sachsen.de), Sächsisches Feiertagsgesetz.
+   Gleiche Daten wie im PDF-Generator lehrerplaner.py. */
+const FIRST = "2026-08-17", LAST = "2027-07-09";
+const FERIEN = [
+  ["Sommerferien", "2026-07-04", "2026-08-14"],
+  ["Herbstferien", "2026-10-12", "2026-10-24"],
+  ["Weihnachtsferien", "2026-12-23", "2027-01-02"],
+  ["Winterferien", "2027-02-08", "2027-02-19"],
+  ["Osterferien", "2027-03-26", "2027-04-02"],
+  ["Pfingstferien", "2027-05-15", "2027-05-18"],
+  ["Sommerferien", "2027-07-10", "2027-08-20"],
+];
+const FEIERTAGE = {
+  "2026-10-03": "Tag der Deutschen Einheit", "2026-10-31": "Reformationstag",
+  "2026-11-18": "Buß- und Bettag", "2026-12-25": "1. Weihnachtstag", "2026-12-26": "2. Weihnachtstag",
+  "2027-01-01": "Neujahr", "2027-03-26": "Karfreitag", "2027-03-28": "Ostersonntag",
+  "2027-03-29": "Ostermontag", "2027-05-01": "Tag der Arbeit", "2027-05-06": "Christi Himmelfahrt",
+  "2027-05-16": "Pfingstsonntag", "2027-05-17": "Pfingstmontag",
+};
+const UNTERRICHTSFREI = { "2027-05-07": "Unterrichtsfrei (nach Himmelfahrt)" };
+const HINWEISE = { "2027-05-27": "Fronleichnam (nur regional Feiertag)" };
+const WT = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+const WT2 = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+const MON = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+const MONTHS = [[2026, 8], [2026, 9], [2026, 10], [2026, 11], [2026, 12], [2027, 1], [2027, 2], [2027, 3], [2027, 4], [2027, 5], [2027, 6], [2027, 7]];
+
+const pad = n => String(n).padStart(2, "0");
+const D = s => { const [y, m, d] = s.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+const iso = dt => dt.toISOString().slice(0, 10);
+const add = (s, n) => { const d = D(s); d.setUTCDate(d.getUTCDate() + n); return iso(d); };
+const wd = s => (D(s).getUTCDay() + 6) % 7;
+const monday = s => add(s, -wd(s));
+const todayIso = () => { const n = new Date(); return n.getFullYear() + "-" + pad(n.getMonth() + 1) + "-" + pad(n.getDate()); };
+const fmt = (s, year = true) => { const [y, m, d] = s.split("-").map(Number); return d + ". " + MON[m - 1] + (year ? " " + y : ""); };
+const fmtShort = s => { const [, m, d] = s.split("-").map(Number); return d + "." + m + "."; };
+
+function ferienName(s) { for (const [n, a, b] of FERIEN) if (a <= s && s <= b) return n; return null; }
+function baseStatus(s) {
+  if (FEIERTAGE[s]) return ["feiertag", FEIERTAGE[s]];
+  if (UNTERRICHTSFREI[s]) return ["frei", UNTERRICHTSFREI[s]];
+  const f = ferienName(s);
+  if (f || s < FIRST || s > LAST) return ["ferien", f || "Sommerferien"];
+  if (wd(s) >= 5) return ["wochenende", "Wochenende"];
+  return ["schule", ""];
+}
+function status(s) {
+  if (S && S.settings.bewegl === s && baseStatus(s)[0] === "schule") return ["frei", "Beweglicher Ferientag"];
+  return baseStatus(s);
+}
+const SCHOOLDAYS = [];
+for (let s = FIRST; s <= LAST; s = add(s, 1)) if (baseStatus(s)[0] === "schule") SCHOOLDAYS.push(s);
+const DAYNO = Object.fromEntries(SCHOOLDAYS.map((s, i) => [s, i + 1]));
+const WEEKS = [];
+for (const s of SCHOOLDAYS) { const m = monday(s); if (WEEKS[WEEKS.length - 1] !== m) WEEKS.push(m); }
+const WEEKNO = Object.fromEntries(WEEKS.map((m, i) => [m, i + 1]));
+console.assert(SCHOOLDAYS.length === 196 && WEEKS.length === 41, SCHOOLDAYS.length, WEEKS.length);
+
+function nextBreak(s) {
+  for (const [n, a] of FERIEN) if (a > s) {
+    let c = 0; for (const d of SCHOOLDAYS) if (d >= s && d < a) c++;
+    return { name: n, start: a, days: c };
+  }
+  return null;
+}
+
+/* ---------------------------------------------------------- Daten */
+const KEY = "lehrerplaner.sachsen.v1";
+const ZEITEN = [["07:30", "08:15"], ["08:25", "09:10"], ["09:30", "10:15"], ["10:25", "11:10"], ["11:30", "12:15"], ["12:25", "13:10"], ["13:20", "14:05"], ["14:15", "15:00"]];
+let S = null, storageOk = true;
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+function blank() {
+  return { v: 1, beispiel: false, settings: { bewegl: "" }, zeiten: ZEITEN.map(z => z.slice()), plan: {}, klassen: {}, kOrder: [], tage: {}, check: {}, eigene: {} };
+}
+function newKlasse(name, fach) {
+  return { name, fach, s: {}, sOrder: [], leist: {}, lOrder: [], noten: {}, fehl: {}, sitz: { rows: 5, cols: 8, seats: {} }, notizen: "" };
+}
+function sample() {
+  const st = blank(); st.beispiel = true;
+  const mk = (id, name, fach, names) => {
+    const k = newKlasse(name, fach);
+    names.forEach((n, i) => { const sid = id + "s" + i; k.s[sid] = { name: n, notiz: "" }; k.sOrder.push(sid); });
+    st.klassen[id] = k; st.kOrder.push(id); return k;
+  };
+  const a = mk("k7a", "7a", "Mathematik", ["Lena Hoffmann", "Paul Krüger", "Emma Schulz", "Jonas Wagner", "Sophie Richter", "Ben Neumann", "Marie Lehmann", "Finn Schmidt"]);
+  mk("k9b", "9b", "Physik", ["Clara Fischer", "Lukas Weber", "Hannah Becker", "Elias Wolf", "Mila Schröder", "Noah Braun"]);
+  a.s.k7as2.notiz = "Nachteilsausgleich: 10 Min. mehr Zeit";
+  [["l1", "Test Brüche", "2026-09-10", "1"], ["l2", "Klassenarbeit 1", "2026-09-24", "2"], ["l3", "Mündlich", "2026-09-30", "1"]]
+    .forEach(([id, t, d, g]) => { a.leist[id] = { titel: t, datum: d, gew: g }; a.lOrder.push(id); a.noten[id] = {}; });
+  const g = [["2", "3", "2-"], ["1", "2+", "1"], ["3", "3-", "2"], ["4", "3", "3"], ["2+", "2", "2"], ["3", "4", "3+"], ["1-", "1", "1"], ["2", "2-", "3"]];
+  a.sOrder.forEach((sid, i) => ["l1", "l2", "l3"].forEach((l, j) => { a.noten[l][sid] = g[i][j]; }));
+  a.fehl["2026-09-29"] = { k7as3: "e", k7as5: "v" };
+  a.fehl["2026-10-01"] = { k7as3: "u" };
+  a.sitz.seats = { "0-1": "k7as0", "0-2": "k7as1", "1-0": "k7as2", "1-1": "k7as3", "2-4": "k7as4", "2-5": "k7as5", "3-2": "k7as6", "3-3": "k7as7" };
+  a.notizen = "Wandertag 9. Oktober: Elternbrief bis 5.10. zurück.";
+  const P = { "0-1": ["k7a", "Mathematik", "204"], "0-2": ["k7a", "Mathematik", "204"], "0-4": ["k9b", "Physik", "Ph 1"],
+    "1-3": ["k7a", "Mathematik", "204"], "1-5": ["k9b", "Physik", "Ph 1"], "1-6": ["k9b", "Physik", "Ph 1"],
+    "2-2": ["k7a", "Mathematik", "204"], "3-1": ["k9b", "Physik", "Ph 1"], "3-4": ["k7a", "Mathematik", "204"], "4-3": ["k7a", "Mathematik", "112"] };
+  for (const k in P) st.plan[k] = { kid: P[k][0], fach: P[k][1], raum: P[k][2] };
+  st.tage["2026-10-05"] = { st: { 1: "Prozentrechnung: Grundwert, Prozentwert, Prozentsatz", 2: "Übung S. 54 Nr. 3–7", 4: "Elektrischer Widerstand, Versuch" }, auf: [{ t: "Arbeitsblatt Prozentrechnung kopieren", done: false }, { t: "Elternbriefe Wandertag einsammeln", done: false }], notiz: "" };
+  st.tage["2026-10-02"] = { st: {}, auf: [{ t: "Klassenarbeit 7a korrigieren", done: true }], notiz: "" };
+  return st;
+}
+function load() {
+  SY = lsGet(SYNC_KEY, {}); STAMPS = lsGet(STAMP_KEY, {}); SHADOW = lsGet(SHADOW_KEY, null);
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) { S = Object.assign(blank(), JSON.parse(raw)); normalize(); return; }
+  } catch (e) { storageOk = false; }
+  S = sample();
+}
+function saveLocal() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); storageOk = true; }
+  catch (e) { storageOk = false; }
+  stamp();
+}
+function save() { saveLocal(); syncSoon(); }
+/* Grundgerüst ergänzen und Reihenfolgen reparieren, z. B. nach dem Zusammenführen zweier Geräte */
+function normalize() {
+  const b = blank();
+  for (const f in b) if (S[f] == null) S[f] = b[f];
+  if (!Array.isArray(S.zeiten) || S.zeiten.length !== 8) S.zeiten = ZEITEN.map((z, i) => (S.zeiten && S.zeiten[i]) || z.slice());
+  const fixOrder = (order, map) => { const o = (Array.isArray(order) ? order : []).filter((x, i, a) => map[x] && a.indexOf(x) === i); for (const x in map) if (!o.includes(x)) o.push(x); return o; };
+  for (const id in S.klassen) {
+    const k = S.klassen[id], d = newKlasse("", "");
+    for (const f in d) if (k[f] == null) k[f] = d[f];
+    if (!k.sitz.seats) k.sitz.seats = {};
+    for (const sid in k.s) if (k.s[sid].name == null) k.s[sid].name = "";
+    k.sOrder = fixOrder(k.sOrder, k.s);
+    k.lOrder = fixOrder(k.lOrder, k.leist);
+    for (const l of k.lOrder) { if (!k.noten[l]) k.noten[l] = {}; if (k.leist[l].titel == null) k.leist[l].titel = ""; }
+  }
+  S.kOrder = fixOrder(S.kOrder, S.klassen);
+  for (const d in S.tage) { const t = S.tage[d]; if (!t.st) t.st = {}; if (!Array.isArray(t.auf)) t.auf = []; }
+}
+let saveT;
+const saveSoon = () => { clearTimeout(saveT); saveT = setTimeout(save, 250); };
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { clearTimeout(saveT); save(); } });
+
+function setPath(p, v) {
+  const ks = p.split("|"); let o = S;
+  for (let i = 0; i < ks.length - 1; i++) { if (o[ks[i]] == null) o[ks[i]] = {}; o = o[ks[i]]; }
+  o[ks[ks.length - 1]] = v;
+}
+const day = s => (S.tage[s] ||= { st: {}, auf: [], notiz: "" });
+const dayHas = s => { const t = S.tage[s]; return !!t && (t.notiz || t.auf && t.auf.length || Object.values(t.st || {}).some(Boolean)); };
+
+/* Noten: 1–6, mit + / − als Viertelnote, Komma erlaubt */
+function gval(v) {
+  if (v == null) return null;
+  v = String(v).trim().replace(",", ".").replace("–", "-");
+  const m = v.match(/^([1-6])\s*([+-])$/);
+  if (m) return +m[1] + (m[2] === "+" ? -0.25 : 0.25);
+  if (!/^\d(\.\d+)?$/.test(v)) return null;
+  const n = parseFloat(v); return n >= 1 && n <= 6 ? n : null;
+}
+const fmtAvg = x => x == null ? "–" : x.toFixed(2).replace(".", ",");
+function studentAvg(k, sid) {
+  let s = 0, w = 0;
+  for (const l of k.lOrder) { const g = gval(k.noten[l] && k.noten[l][sid]); if (g != null) { const ww = +k.leist[l].gew || 1; s += g * ww; w += ww; } }
+  return w ? s / w : null;
+}
+function leistAvg(k, l) {
+  let s = 0, n = 0;
+  for (const sid of k.sOrder) { const g = gval(k.noten[l] && k.noten[l][sid]); if (g != null) { s += g; n++; } }
+  return n ? s / n : null;
+}
+function klasseAvg(k) {
+  const xs = k.sOrder.map(sid => studentAvg(k, sid)).filter(x => x != null);
+  return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+}
+
+/* ---------------------------------------------------------- UI-Zustand */
+const UI = { view: "heute", sel: todayIso(), kid: null, ktab: "schueler", anwDate: todayIso(), mehr: null, planDay: Math.min(wd(todayIso()), 4), confirm: null, export: "" };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const $ = id => document.getElementById(id);
+function toast(t) { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2200); }
+
+const ICON = {
+  heute: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg>',
+  woche: '<svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M6.6 4.5v15M10.2 4.5v15M13.8 4.5v15M17.4 4.5v15"/></svg>',
+  kalender: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01"/></svg>',
+  klassen: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.8.2 5 2 5 5"/></svg>',
+  mehr: '<svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg>',
+};
+const VIEWS = [["heute", "Tag"], ["woche", "Woche"], ["kalender", "Jahr"], ["klassen", "Klassen"], ["mehr", "Mehr"]];
+
+function renderNav() {
+  $("nav").innerHTML = '<div class="brand">Lehrerplaner<small>Sachsen 2026/27</small></div><div class="sep"></div>' +
+    VIEWS.map(([v, t]) => `<button data-a="view" data-v="${v}" ${UI.view === v ? 'aria-current="page"' : ""}>${ICON[v]}<span>${t}</span></button>`).join("");
+}
+
+function confirmBtn(key, label, action, attrs = "", cls = "btn danger") {
+  if (UI.confirm === key) return `<span class="confirm"><span>Sicher?</span><button class="btn danger" data-a="${action}" ${attrs}>Ja, ${esc(label.toLowerCase())}</button><button class="btn" data-a="cancel">Abbrechen</button></span>`;
+  return `<button class="${cls}" data-a="ask" data-q="${esc(key)}">${esc(label)}</button>`;
+}
+function banner() {
+  let h = "";
+  if (!storageOk) h += `<div class="note"><p><b>Speichern klappt gerade nicht.</b> Der Browser blockiert den Speicher (z.&nbsp;B. privates Fenster). Änderungen gehen beim Schließen verloren.</p></div>`;
+  if (S.beispiel) h += `<div class="note"><p><b>Beispieldaten.</b> Klassen, Namen und Noten sind ausgedacht, damit du siehst, wie es aussieht.</p>${confirmBtn("reset", "Leer starten", "reset", "", "btn")}</div>`;
+  return h;
+}
+
+function klName(kid) { const k = S.klassen[kid]; return k ? k.name : ""; }
+function lessonOf(s, n) { return S.plan[wd(s) + "-" + n]; }
+
+/* ---------------------------------------------------------- Tag */
+function renderHeute() {
+  const d = UI.sel, [st, label] = status(d), t = S.tage[d] || { st: {}, auf: [], notiz: "" }, w = wd(d);
+  const today = todayIso();
+  let sub = st === "schule"
+    ? `Schultag ${DAYNO[d]} von 196 · Woche ${WEEKNO[monday(d)]}`
+    : `<span class="pill st-${st}">${esc(label)}</span>`;
+  if (HINWEISE[d]) sub += ` · <span class="pill st-frei">${esc(HINWEISE[d])}</span>`;
+  let h = banner() + `<div class="head"><div><h1>${WT[w]}, ${fmt(d)}</h1><div class="sub">${sub}</div></div>
+    <div class="ctrl"><button class="btn sq" data-a="day" data-n="-1" aria-label="Vorheriger Tag">‹</button>
+    ${d !== today ? '<button class="btn" data-a="today">Heute</button>' : ""}
+    <button class="btn sq" data-a="day" data-n="1" aria-label="Nächster Tag">›</button>
+    <input type="date" id="jump" data-u="sel" value="${d}" min="2026-08-01" max="2027-07-31" aria-label="Datum wählen" style="width:auto"></div></div>`;
+
+  const nb = nextBreak(d);
+  let left = "";
+  if (st === "schule") {
+    const any = Object.keys(S.plan).length > 0;
+    let rows = "";
+    for (let n = 1; n <= 8; n++) {
+      const e = lessonOf(d, n), z = S.zeiten[n - 1] || ["", ""];
+      const tm = `<small>${esc(z[0])}</small>`;
+      if (!e || !e.kid && !e.fach) {
+        rows += `<div class="lesson empty"><div class="n">${n}.${tm}</div><div class="what muted small">frei</div></div>`;
+        continue;
+      }
+      rows += `<div class="lesson"><div class="n">${n}.${tm}</div><div>
+        <div class="what"><strong>${esc(klName(e.kid))} ${esc(e.fach)}</strong><span class="muted">Raum ${esc(e.raum || "–")}</span>
+        ${e.kid && S.klassen[e.kid] ? `<button class="btn quiet" data-a="anw" data-k="${e.kid}">Anwesenheit</button>` : ""}</div>
+        <textarea id="st-${n}" class="inline" data-p="tage|${d}|st|${n}" placeholder="Thema, Hausaufgabe, Notiz">${esc(t.st && t.st[n])}</textarea></div></div>`;
+    }
+    left = `<section class="card"><h2>Stunden</h2>${any ? `<div class="lessons">${rows}</div>` :
+      `<p class="muted">Noch kein Stundenplan eingetragen. Dann erscheinen hier jeden Tag automatisch deine Stunden.</p><button class="btn primary" data-a="mehr" data-m="plan">Stundenplan eintragen</button>`}</section>`;
+  } else {
+    left = `<section class="card"><h2>${esc(label)}</h2><p class="muted">Kein Unterricht. Aufgaben und Notizen kannst du trotzdem eintragen.</p></section>`;
+  }
+  if (nb && d >= "2026-08-01") {
+    left += `<section class="card count"><b>${nb.days}</b><span>${nb.days === 1 ? "Schultag" : "Schultage"} bis zu den ${esc(nb.name)} <span class="muted">(ab ${fmt(nb.start, false)})</span></span></section>`;
+  }
+  const tasks = (t.auf || []).map((a, i) => `<li class="${a.done ? "done" : ""}">
+      <input type="checkbox" id="a-${i}" data-p="tage|${d}|auf|${i}|done" data-after="rerender" ${a.done ? "checked" : ""} aria-label="Erledigt">
+      <input type="text" class="inline" id="at-${i}" data-p="tage|${d}|auf|${i}|t" value="${esc(a.t)}">
+      <button class="x" data-a="auf-del" data-i="${i}" aria-label="Aufgabe löschen">×</button></li>`).join("");
+  const right = `<section class="card"><h2>Aufgaben</h2><ul class="tasks">${tasks}</ul>
+      <form class="addrow" data-f="auf-add"><input type="text" id="auf-new" placeholder="Neue Aufgabe" autocomplete="off"><button class="btn" type="submit">Hinzufügen</button></form></section>
+    <section class="card"><h2>Notizen</h2><textarea id="notiz" data-p="tage|${d}|notiz" rows="6" placeholder="Was heute wichtig ist">${esc(t.notiz)}</textarea></section>`;
+  return h + `<div class="cols"><div class="stack">${left}</div><div class="stack">${right}</div></div>`;
+}
+
+/* ---------------------------------------------------------- Woche */
+function renderWoche() {
+  const m = monday(UI.sel), today = todayIso();
+  const wn = WEEKNO[m];
+  let h = banner() + `<div class="head"><div><h1>${wn ? "Woche " + wn : "Woche"}</h1><div class="sub">${fmt(m, false)} bis ${fmt(add(m, 4))}</div></div>
+    <div class="ctrl"><button class="btn sq" data-a="week" data-n="-7" aria-label="Vorherige Woche">‹</button>
+    ${monday(today) !== m ? '<button class="btn" data-a="today">Diese Woche</button>' : ""}
+    <button class="btn sq" data-a="week" data-n="7" aria-label="Nächste Woche">›</button></div></div><div class="week">`;
+  for (let i = 0; i < 5; i++) {
+    const d = add(m, i), [st, label] = status(d), t = S.tage[d] || {};
+    let body = "";
+    if (st === "schule") {
+      for (let n = 1; n <= 8; n++) {
+        const e = lessonOf(d, n); if (!e || !e.kid && !e.fach) continue;
+        const topic = t.st && t.st[n];
+        body += `<div class="wl"><b>${n}</b><div><div>${esc(klName(e.kid))} ${esc(e.fach)}</div>${topic ? `<div class="t">${esc(topic)}</div>` : ""}</div></div>`;
+      }
+      if (!body) body = '<div class="muted small">Keine Stunden eingetragen</div>';
+    } else body = `<span class="pill st-${st}">${esc(label)}</span>`;
+    const open = (t.auf || []).filter(a => !a.done).length;
+    if (open) body += `<div class="small muted">${open} offene ${open === 1 ? "Aufgabe" : "Aufgaben"}</div>`;
+    h += `<button class="wday ${d === today ? "is-today" : ""}" data-a="go" data-d="${d}"><div class="dh"><b>${WT[i]}</b><span class="muted small">${fmtShort(d)}</span></div>${body}</button>`;
+  }
+  return h + "</div>";
+}
+
+/* ---------------------------------------------------------- Jahr */
+function miniMonth(y, m) {
+  const first = `${y}-${pad(m)}-01`, off = wd(first), today = todayIso();
+  const dim = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  let cells = [], h = `<section class="card"><h2>${MON[m - 1]} ${y}</h2><table class="cal"><thead><tr>${WT2.map(x => `<th>${x}</th>`).join("")}</tr></thead><tbody><tr>`;
+  for (let i = 0; i < off; i++) cells.push("<td></td>");
+  for (let dd = 1; dd <= dim; dd++) {
+    const s = `${y}-${pad(m)}-${pad(dd)}`, [st, label] = status(s);
+    const cls = [st !== "schule" ? "s-" + st : "", s === today ? "today" : "", dayHas(s) ? "has" : ""].join(" ").trim();
+    cells.push(`<td><button class="${cls}" data-a="go" data-d="${s}" title="${esc(label || "Schultag " + DAYNO[s])}">${dd}</button></td>`);
+  }
+  while (cells.length % 7) cells.push("<td></td>");
+  for (let i = 0; i < cells.length; i += 7) h += (i ? "</tr><tr>" : "") + cells.slice(i, i + 7).join("");
+  return h + "</tr></tbody></table></section>";
+}
+function renderKalender() {
+  return banner() + `<div class="head"><div><h1>Schuljahr 2026/27</h1><div class="sub">196 Unterrichtstage in 41 Wochen · erster Schultag 17. August 2026</div></div></div>
+    <div class="legend"><span><i style="background:var(--ferien)"></i>Ferien</span><span><i style="background:var(--feier)"></i>Feiertag</span><span><i style="background:var(--frei)"></i>unterrichtsfrei</span><span><i style="background:var(--we)"></i>Wochenende</span><span class="muted">Punkt = Eintrag vorhanden</span></div>
+    <div class="months">${MONTHS.map(([y, m]) => miniMonth(y, m)).join("")}</div>`;
+}
+
+/* ---------------------------------------------------------- Klassen */
+function renderKlassen() {
+  if (UI.kid && S.klassen[UI.kid]) return renderKlasse(S.klassen[UI.kid]);
+  const cards = S.kOrder.map(id => {
+    const k = S.klassen[id], a = klasseAvg(k);
+    return `<button class="card kcard" data-a="kl" data-k="${id}"><b>${esc(k.name)}</b><span>${esc(k.fach)}</span><span class="muted small">${k.sOrder.length} Schüler·innen · Ø ${fmtAvg(a)}</span></button>`;
+  }).join("");
+  return banner() + `<div class="head"><div><h1>Klassen</h1><div class="sub">Schülerlisten, Noten, Anwesenheit und Sitzplan</div></div></div>
+    <div class="stack">${cards ? `<div class="list">${cards}</div>` : '<p class="muted">Noch keine Klasse angelegt.</p>'}
+    <section class="card"><h2>Neue Klasse</h2><form class="form row" data-f="kl-add">
+      <label>Klasse<input type="text" id="kl-name" placeholder="z. B. 8c" required></label>
+      <label>Fach<input type="text" id="kl-fach" placeholder="z. B. Deutsch"></label>
+      <span></span><button class="btn primary" type="submit">Anlegen</button></form></section></div>`;
+}
+function renderKlasse(k) {
+  const id = UI.kid;
+  const tabs = [["schueler", "Schüler·innen"], ["noten", "Noten"], ["anw", "Anwesenheit"], ["sitz", "Sitzplan"], ["notiz", "Notizen"]];
+  let h = banner() + `<div class="head"><div><button class="btn quiet" data-a="kl" data-k="" style="padding-left:0">‹ Alle Klassen</button>
+    <h1>${esc(k.name)} · ${esc(k.fach)}</h1><div class="sub">${k.sOrder.length} Schüler·innen · Klassenschnitt ${fmtAvg(klasseAvg(k))}</div></div></div>
+    <div class="tabs" role="tablist">${tabs.map(([t, l]) => `<button role="tab" aria-selected="${UI.ktab === t}" data-a="ktab" data-t="${t}">${l}</button>`).join("")}</div>`;
+  if (UI.ktab === "schueler") {
+    const rows = k.sOrder.map((sid, i) => `<div class="srow"><span class="nr">${i + 1}</span><div class="sfields">
+      <input type="text" id="sn-${sid}" data-p="klassen|${id}|s|${sid}|name" value="${esc(k.s[sid].name)}" aria-label="Name">
+      <input type="text" id="sz-${sid}" data-p="klassen|${id}|s|${sid}|notiz" value="${esc(k.s[sid].notiz)}" placeholder="Hinweis (Förderbedarf, Kontakt …)" aria-label="Hinweis"></div>
+      ${UI.confirm === "s" + sid ? `<span class="confirm"><button class="btn danger" data-a="s-del" data-s="${sid}">Löschen</button><button class="btn" data-a="cancel">Nein</button></span>` : `<button class="x" data-a="ask" data-q="s${sid}" aria-label="Entfernen">×</button>`}</div>`).join("");
+    h += `<div class="cols"><section class="card">${rows || '<p class="muted">Noch niemand eingetragen.</p>'}</section>
+      <section class="card"><h2>Namen hinzufügen</h2><form class="form" data-f="s-add"><label>Einen Namen pro Zeile, auch aus einer Liste einfügen<textarea id="s-new" rows="6" placeholder="Anna Muster&#10;Ben Beispiel"></textarea></label><button class="btn primary" type="submit">Hinzufügen</button></form>
+      <div style="margin-top:16px">${confirmBtn("kdel", "Klasse löschen", "k-del")}</div></section></div>`;
+  } else if (UI.ktab === "noten") {
+    const head = k.lOrder.map(l => { const L = k.leist[l]; return `<th class="c">${esc(L.titel)}<br><span class="muted" style="font-weight:400">${L.datum ? fmtShort(L.datum) : ""} · ×${esc(L.gew)}</span>${UI.confirm === "l" + l ? `<br><button class="btn danger" data-a="l-del" data-l="${l}">Löschen</button>` : `<br><button class="x" data-a="ask" data-q="l${l}" aria-label="Leistung löschen">×</button>`}</th>`; }).join("");
+    const body = k.sOrder.map(sid => `<tr><td class="sticky">${esc(k.s[sid].name)}</td>${k.lOrder.map(l =>
+      `<td class="c"><input class="g" type="text" id="g-${l}-${sid}" data-p="klassen|${id}|noten|${l}|${sid}" data-after="avg" value="${esc(k.noten[l] && k.noten[l][sid])}" autocomplete="off" aria-label="Note"></td>`).join("")}
+      <td class="c avg" id="avg-${sid}">${fmtAvg(studentAvg(k, sid))}</td></tr>`).join("");
+    const foot = `<tr><td class="sticky">Schnitt</td>${k.lOrder.map(l => `<td class="c" id="lavg-${l}">${fmtAvg(leistAvg(k, l))}</td>`).join("")}<td class="c avg" id="kavg">${fmtAvg(klasseAvg(k))}</td></tr>`;
+    h += `<div class="stack"><section class="card">${k.lOrder.length ? `<div class="scroll"><table class="grid"><thead><tr><th class="sticky">Name</th>${head}<th class="c">Ø</th></tr></thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
+      <p class="small muted">Noten 1 bis 6, auch mit + oder − (2+ zählt 1,75, 2− zählt 2,25). Der Schnitt ist nach Gewicht gerechnet.</p>` : '<p class="muted">Leg unten die erste Leistung an, zum Beispiel einen Test oder eine Klassenarbeit.</p>'}</section>
+      <section class="card"><h2>Neue Leistung</h2><form class="form row" data-f="l-add">
+        <label>Bezeichnung<input type="text" id="l-t" placeholder="z. B. Klassenarbeit 2" required></label>
+        <label>Datum<input type="date" id="l-d" value="${todayIso()}"></label>
+        <label>Gewicht<select id="l-g"><option value="1">einfach</option><option value="2">doppelt</option><option value="3">dreifach</option></select></label>
+        <button class="btn primary" type="submit">Anlegen</button></form></section></div>`;
+  } else if (UI.ktab === "anw") {
+    const d = UI.anwDate, f = k.fehl[d] || {};
+    const LBL = { "": "anwesend", e: "fehlt entschuldigt", u: "fehlt unentschuldigt", v: "verspätet" };
+    const rows = k.sOrder.map((sid, i) => {
+      const v = f[sid] || ""; let e = 0, u = 0, vv = 0;
+      for (const dd in k.fehl) { const x = k.fehl[dd][sid]; if (x === "e") e++; else if (x === "u") u++; else if (x === "v") vv++; }
+      return `<div class="anw"><span class="nr muted small">${i + 1}</span><span>${esc(k.s[sid].name)}</span>
+        <button class="btn state ${v}" data-a="anw-cycle" data-s="${sid}">${LBL[v]}</button>
+        ${e + u + vv ? `<span class="tot">Schuljahr: ${e} entschuldigt · ${u} unentschuldigt · ${vv} verspätet</span>` : ""}</div>`;
+    }).join("");
+    const [st, label] = status(d);
+    h += `<section class="card"><div class="head" style="margin-bottom:8px"><div><h2>${WT[wd(d)]}, ${fmt(d)}</h2>${st !== "schule" ? `<span class="pill st-${st}">${esc(label)}</span>` : ""}</div>
+      <div class="ctrl"><button class="btn sq" data-a="anw-day" data-n="-1" aria-label="Vorheriger Tag">‹</button><input type="date" id="anw-d" data-u="anwDate" value="${d}" style="width:auto" aria-label="Datum"><button class="btn sq" data-a="anw-day" data-n="1" aria-label="Nächster Tag">›</button></div></div>
+      <p class="small muted" style="margin:0 0 6px">Antippen wechselt: anwesend, entschuldigt, unentschuldigt, verspätet.</p>${rows || '<p class="muted">Erst Schüler·innen eintragen.</p>'}</section>`;
+  } else if (UI.ktab === "sitz") {
+    const R = Math.max(1, Math.min(10, +k.sitz.rows || 5)), C = Math.max(1, Math.min(12, +k.sitz.cols || 8));
+    const opts = sel => '<option value="">–</option>' + k.sOrder.map(sid => `<option value="${sid}" ${sel === sid ? "selected" : ""}>${esc(k.s[sid].name)}</option>`).join("");
+    let grid = "";
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      const v = k.sitz.seats[r + "-" + c] || "";
+      grid += `<select id="seat-${r}-${c}" class="${v ? "taken" : ""}" data-p="klassen|${id}|sitz|seats|${r}-${c}" data-after="rerender" aria-label="Reihe ${r + 1}, Platz ${c + 1}">${opts(v)}</select>`;
+    }
+    h += `<section class="card"><div class="form row" style="grid-template-columns:repeat(2,minmax(0,140px));margin-bottom:12px">
+        <label>Reihen<input type="number" id="sitz-r" min="1" max="10" data-p="klassen|${id}|sitz|rows" data-after="rerender" value="${R}"></label>
+        <label>Plätze pro Reihe<input type="number" id="sitz-c" min="1" max="12" data-p="klassen|${id}|sitz|cols" data-after="rerender" value="${C}"></label></div>
+      <div class="scroll"><div style="min-width:${C * 78}px"><div class="board">TAFEL</div><div class="seats" style="grid-template-columns:repeat(${C},minmax(0,1fr))">${grid}</div></div></div></section>`;
+  } else {
+    h += `<section class="card"><textarea id="k-notiz" rows="12" data-p="klassen|${id}|notizen" placeholder="Absprachen, Elterngespräche, Termine der Klasse">${esc(k.notizen)}</textarea></section>`;
+  }
+  return h;
+}
+
+/* ---------------------------------------------------------- Mehr */
+const START = [
+  ["start1", "Die ersten Tage", ["Schlüssel, Zugangsdaten und Kopierkarte abholen", "Stundenplan und Raumplan prüfen", "Klassenlisten aktualisieren", "Sitzplan vorbereiten", "Namensschilder bereitlegen", "Klassenregeln besprechen", "Hausordnung und Fluchtwege erklären", "Ämter verteilen", "Hefter- und Heftführung festlegen", "Lehrbücher ausgeben und notieren", "Elternbrief zum Schuljahresbeginn", "Leistungsbewertung transparent machen", "Termine in die Monatsübersicht eintragen", "Kennenlernspiel einplanen", "Gesundheitsinfos und Allergien erfassen", "Erreichbarkeit der Eltern prüfen"]],
+  ["start2", "Klassen-Setup", ["Klassenlehrer/in und Stellvertretung", "Klassensprecher/in gewählt", "Klassenkasse eingerichtet", "Ordnungsdienst / Tafeldienst", "Klassenraum gestaltet", "Garderobe und Fächer zugeteilt", "Elternvertretung gewählt", "Kommunikationsweg mit Eltern", "Förderbedarfe dokumentiert", "Nachteilsausgleiche geklärt", "Wandertag / Exkursionen geplant", "Geburtstagsliste angelegt"]],
+  ["start3", "Elternabend", ["Termin und Raum reserviert", "Einladung verschickt", "Tagesordnung erstellt", "Anwesenheitsliste vorbereitet", "Vorstellung der Fachlehrkräfte", "Leistungsbewertung erklärt", "Termine des Schuljahres vorgestellt", "Wahl der Elternvertretung", "Klassenfahrt / Projekte besprochen", "Fragen und Anliegen gesammelt", "Protokoll geführt", "Protokoll verteilt"]],
+  ["start4", "Materialliste", ["Kreide / Whiteboard-Marker", "Kopierpapier", "Klebeband und Magnete", "Schere, Kleber, Tacker", "Ersatzstifte und Lineale", "Namensschilder", "Moderationskarten", "Klarsichthüllen", "Ordner und Register", "Stempel und Sticker", "USB-Stick / Adapter", "Taschentücher", "Erste-Hilfe-Set geprüft", "Stoppuhr / Timer"]],
+];
+const NOTFALL = [
+  ["Kreatives Schreiben", "Für alle Fächer und Klassenstufen einsetzbar.", [["Einstieg (5 Min.)", "Ein Bild, ein Gegenstand oder ein Satzanfang an der Tafel."], ["Schreibphase (20 Min.)", "Die Klasse schreibt eine Geschichte, einen Brief aus der Zukunft oder ein Elfchen zum Fachthema."], ["Austausch (10 Min.)", "Partnerlesen mit einem Lob und einer Frage."], ["Abschluss (10 Min.)", "Drei Freiwillige lesen vor, kurze Rückmeldung der Klasse."]]],
+  ["Wissensrallye", "Wiederholung des aktuellen Stoffs in Teams.", [["Teams bilden (5 Min.)", "Vier bis sechs Gruppen, Teamnamen an die Tafel."], ["Fragen erstellen (15 Min.)", "Jede Gruppe schreibt zehn Fragen mit Lösung zum letzten Thema."], ["Rallye (20 Min.)", "Gruppen stellen sich gegenseitig Fragen, Punkte an der Tafel."], ["Auswertung (5 Min.)", "Siegerteam, schwierigste Frage gemeinsam klären."]]],
+  ["Lernplakat", "Ergebnissicherung mit Produkt für den Klassenraum.", [["Thema wählen (5 Min.)", "Ein Thema der letzten Wochen in Teilthemen aufteilen."], ["Recherche (15 Min.)", "Mit Buch und Hefter die wichtigsten Fakten sammeln."], ["Gestaltung (20 Min.)", "Plakat mit Überschrift, Skizze und drei Kernaussagen."], ["Galerie (5 Min.)", "Plakate aufhängen, Rundgang mit Klebepunkten."]]],
+];
+const MEHR = [["plan", "Stundenplan", "Stunden, Zeiten und Räume"], ["check", "Checklisten", "Schulstart, Klassen-Setup, Elternabend, Material"], ["notfall", "Notfallstunden", "Drei Stunden ohne Vorbereitung"], ["ferien", "Ferien & Feiertage", "Termine 2026/27 und beweglicher Ferientag"], ["sync", "Geräte abgleichen", ""], ["daten", "Daten sichern", "Sicherung als Datei, neu beginnen"]];
+
+function renderMehr() {
+  const back = '<button class="btn quiet" data-a="mehr" data-m="" style="padding-left:0">‹ Mehr</button>';
+  const m = UI.mehr;
+  if (m === "plan") {
+    const w = UI.planDay;
+    const kopts = sel => '<option value="">–</option>' + S.kOrder.map(id => `<option value="${id}" ${sel === id ? "selected" : ""}>${esc(S.klassen[id].name)}</option>`).join("");
+    let rows = "";
+    for (let n = 1; n <= 8; n++) {
+      const e = S.plan[w + "-" + n] || {}, z = S.zeiten[n - 1];
+      rows += `<div class="prow"><div class="lesson" style="border:0;padding:0;display:block"><div class="n">${n}.</div></div><div class="pfields">
+        <label>Beginn<input type="time" id="z0-${n}" data-p="zeiten|${n - 1}|0" value="${esc(z[0])}"></label>
+        <label>Ende<input type="time" id="z1-${n}" data-p="zeiten|${n - 1}|1" value="${esc(z[1])}"></label>
+        <label>Klasse<select id="pk-${w}-${n}" data-p="plan|${w}-${n}|kid" data-after="planfach" data-n="${n}">${kopts(e.kid)}</select></label>
+        <label>Fach<input type="text" id="pf-${w}-${n}" data-p="plan|${w}-${n}|fach" value="${esc(e.fach)}"></label>
+        <label>Raum<input type="text" id="pr-${w}-${n}" data-p="plan|${w}-${n}|raum" value="${esc(e.raum)}"></label></div></div>`;
+    }
+    return `<div class="head"><div>${back}<h1>Stundenplan</h1><div class="sub">Die Zeiten gelten für alle Tage.</div></div></div>
+      <div class="chips">${WT.slice(0, 5).map((t, i) => `<button aria-pressed="${i === w}" data-a="pday" data-w="${i}">${t}</button>`).join("")}</div>
+      <section class="card">${S.kOrder.length ? "" : '<p class="note">Tipp: Leg zuerst unter Klassen deine Klassen an, dann kannst du sie hier auswählen.</p>'}${rows}</section>`;
+  }
+  if (m === "check") {
+    return `<div class="head"><div>${back}<h1>Checklisten</h1></div></div><div class="stack">` + START.map(([key, title, items]) => {
+      const done = items.filter((_, i) => S.check[key] && S.check[key][i]).length;
+      return `<section class="card"><h2>${title} <span class="muted small" style="font-family:var(--f-body);font-weight:400">${done} von ${items.length}</span></h2><ul class="checks">${items.map((it, i) =>
+        `<li><label><input type="checkbox" id="c-${key}-${i}" data-p="check|${key}|${i}" data-after="rerender" ${S.check[key] && S.check[key][i] ? "checked" : ""}><span>${esc(it)}</span></label></li>`).join("")}</ul>
+        <textarea id="e-${key}" data-p="eigene|${key}" rows="3" placeholder="Eigene Punkte" style="margin-top:10px">${esc(S.eigene[key])}</textarea></section>`;
+    }).join("") + "</div>";
+  }
+  if (m === "notfall") {
+    return `<div class="head"><div>${back}<h1>Notfallstunden</h1><div class="sub">Für Vertretung oder wenn die Planung ausfällt</div></div></div><div class="stack">` +
+      NOTFALL.map(([t, sub, steps]) => `<section class="card"><h2>${t}</h2><p class="muted" style="margin:2px 0 10px">${sub}</p><ol class="steps">${steps.map(([a, b]) => `<li><b>${a}</b><br>${b}</li>`).join("")}</ol></section>`).join("") + "</div>";
+  }
+  if (m === "ferien") {
+    const fer = FERIEN.slice(1).map(([n, a, b]) => `<span>${n}</span><span>${a === b ? fmt(a) : fmtShort(a) + " bis " + fmt(b)}</span>`).join("");
+    const fei = Object.entries(FEIERTAGE).map(([d, n]) => `<span>${WT2[wd(d)]} ${fmtShort(d)}${d.slice(0, 4)}</span><span>${n}</span>`).join("");
+    return `<div class="head"><div>${back}<h1>Ferien & Feiertage</h1><div class="sub">Freistaat Sachsen, Schuljahr 2026/27</div></div></div>
+      <div class="cols"><div class="stack"><section class="card"><h2>Ferien</h2><div class="kv">${fer}</div></section>
+      <section class="card"><h2>Feiertage</h2><div class="kv">${fei}<span>Fr 7.5.2027</span><span>unterrichtsfrei</span><span>Do 27.5.2027</span><span>Fronleichnam (nur regional)</span></div></section></div>
+      <section class="card"><h2>Beweglicher Ferientag</h2><p class="muted">Den legt jede Schule selbst fest. Trag ihn ein, dann wird er im Kalender als unterrichtsfrei angezeigt.</p>
+        <input type="date" id="bewegl" data-p="settings|bewegl" value="${esc(S.settings.bewegl)}" min="${FIRST}" max="${LAST}">
+        <p class="small muted">196 Unterrichtstage minus beweglicher Ferientag ergibt 195 Schultage.</p></section></div>`;
+  }
+  if (m === "sync") return renderSync(back);
+  if (m === "daten") {
+    const framed = window.self !== window.top;
+    return `<div class="head"><div>${back}<h1>Daten sichern</h1></div></div><div class="stack">
+      <section class="card"><h2>Wo deine Daten liegen</h2><p style="margin:0">Alles, was du einträgst, wird in diesem Browser auf diesem Gerät gespeichert. ${syncReady() ? "Zusätzlich gleicht es sich verschlüsselt über deine Dropbox mit deinen anderen Geräten ab." : "Mit „Geräte abgleichen“ bekommen deine anderen Geräte automatisch denselben Stand."} Eine Sicherungsdatei ist zusätzlich gut als Notfallkopie.</p></section>
+      <section class="card"><h2>Sicherung erstellen</h2><div class="ctrl"><button class="btn primary" data-a="exp">Sicherung erstellen</button>${UI.export ? `<button class="btn" data-a="copy">Kopieren</button>${framed ? "" : '<button class="btn" data-a="dl">Als Datei speichern</button>'}` : ""}</div>
+        ${UI.export ? `<textarea id="exp" rows="5" readonly style="margin-top:10px;font-size:.8rem">${esc(UI.export)}</textarea>` : ""}</section>
+      <section class="card"><h2>Sicherung einspielen</h2><p class="muted">Ersetzt alle Daten auf diesem Gerät${syncReady() ? " und danach auch auf deinen abgeglichenen Geräten" : ""}.</p><div class="form">
+        <label>Datei wählen<input type="file" id="imp-file" accept=".json,application/json,text/plain"></label>
+        <label>oder Text einfügen<textarea id="imp" rows="4"></textarea></label>
+        <div>${confirmBtn("imp", "Einspielen", "imp", "", "btn primary")}</div></div></section>
+      <section class="card"><h2>Neu beginnen</h2><p class="muted">Löscht alle Einträge auf diesem Gerät${syncReady() ? " und auch auf deinen abgeglichenen Geräten" : ""}.</p>${confirmBtn("reset", "Alles löschen", "reset")}</section></div>`;
+  }
+  UI.mehr = null;
+  return `<div class="head"><div><h1>Mehr</h1></div></div><div class="menu">` +
+    MEHR.map(([k, t, s]) => `<button class="card" data-a="mehr" data-m="${k}"><span><b>${t}</b><small>${k === "sync" ? esc(syncLabel()) : s}</small></span><span aria-hidden="true">›</span></button>`).join("") + "</div>";
+}
+
+/* ---------------------------------------------------------- Abgleich über Dropbox
+   Ende-zu-Ende verschlüsselt: Das Passwort bleibt auf den Geräten, in der Dropbox liegt nur Datensalat.
+   Zusammenführen: Jeder einzelne Eintrag (Note, Thema, Fehltag …) trägt den Zeitpunkt seiner letzten Änderung,
+   beim Abgleich gewinnt je Eintrag die neuere Änderung. So gehen Eingaben von zwei Geräten nicht verloren. */
+const DROPBOX_KEY = "bnxxe9mel4043ad";                       /* App-Key der Dropbox-App, kann auch in der App eingetragen werden */
+const DBX_FILE = "/lehrerplaner-daten.sync";
+const SYNC_KEY = KEY + ".sync", STAMP_KEY = KEY + ".stamps", SHADOW_KEY = KEY + ".shadow";
+let SY = {}, STAMPS = {}, SHADOW = null;
+const SYNC = { state: "idle", msg: "" };
+function lsGet(k, d) { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+const persistSync = () => lsSet(SYNC_KEY, SY);
+const appKey = () => DROPBOX_KEY || SY.appKey || "";
+const syncReady = () => !!(SY.refresh && SY.k && appKey());
+
+function flatten(o, p = "", out = {}) {
+  for (const k in o) {
+    const v = o[k], q = p ? p + "|" + k : k;
+    if (v && typeof v === "object" && !Array.isArray(v)) { if (Object.keys(v).length) flatten(v, q, out); else out[q] = "{}"; }
+    else if (v !== undefined) out[q] = JSON.stringify(v);
+  }
+  return out;
+}
+function unflatten(flat) {
+  const root = {};
+  const keys = Object.keys(flat).sort((a, b) => a.split("|").length - b.split("|").length);
+  for (const p of keys) {
+    const ks = p.split("|"), v = JSON.parse(flat[p]); let o = root;
+    for (let i = 0; i < ks.length - 1; i++) { if (!o[ks[i]] || typeof o[ks[i]] !== "object" || Array.isArray(o[ks[i]])) o[ks[i]] = {}; o = o[ks[i]]; }
+    const last = ks[ks.length - 1];
+    if (v && typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length && o[last] && typeof o[last] === "object") continue;
+    o[last] = v;
+  }
+  return root;
+}
+/* Unterschiede seit dem letzten Speichern mit Zeitstempel versehen */
+function stamp() {
+  const flat = flatten(S), now = Date.now(), old = SHADOW || {};
+  let changed = false;
+  for (const k in flat) if (old[k] !== flat[k]) { STAMPS[k] = [now, 0]; changed = true; }
+  for (const k in old) if (!(k in flat)) { STAMPS[k] = [now, 1]; changed = true; }
+  for (const k in STAMPS) if (STAMPS[k][1] && STAMPS[k][0] < now - 180 * 864e5) { delete STAMPS[k]; changed = true; }
+  SHADOW = flat;
+  if (changed) { lsSet(STAMP_KEY, STAMPS); lsSet(SHADOW_KEY, SHADOW); }
+}
+function merge(lf, ls, rf, rs) {
+  const flat = {}, stamps = {};
+  for (const k of new Set([...Object.keys(ls), ...Object.keys(rs)])) {
+    const a = ls[k], b = rs[k], useR = b && (!a || b[0] > a[0]), s = useR ? b : a;
+    stamps[k] = s;
+    if (!s[1]) { const v = useR ? rf[k] : lf[k]; if (v !== undefined) flat[k] = v; }
+  }
+  return { flat, stamps };
+}
+function adoptFlat(flat, stamps) {
+  S = Object.assign(blank(), unflatten(flat)); normalize();
+  STAMPS = stamps; SHADOW = flat;
+  saveLocal();
+}
+function applyRemote(remote) {
+  stamp();
+  const before = JSON.stringify(SHADOW);
+  const m = merge(SHADOW, STAMPS, remote.flat, remote.stamps);
+  adoptFlat(m.flat, m.stamps);
+  const rs = remote.stamps, ks = Object.keys(STAMPS);
+  const needUpload = ks.length !== Object.keys(rs).length || ks.some(k => !rs[k] || rs[k][0] !== STAMPS[k][0] || rs[k][1] !== STAMPS[k][1]);
+  return { changed: JSON.stringify(SHADOW) !== before, needUpload };
+}
+const localIsEmpty = () => S.beispiel || (!S.kOrder.length && !Object.keys(S.tage).length && !Object.keys(S.plan).length);
+
+/* Verschlüsselung: PBKDF2 (310.000 Runden) und AES-GCM 256 */
+const te = new TextEncoder(), tdc = new TextDecoder();
+function b64(buf) { const u = new Uint8Array(buf); let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const b64url = buf => b64(buf).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const rnd = n => crypto.getRandomValues(new Uint8Array(n));
+async function deriveKey(pw, salt) {
+  const base = await crypto.subtle.importKey("raw", te.encode(pw), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 310000, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+}
+const importKey = raw => crypto.subtle.importKey("raw", unb64(raw), "AES-GCM", false, ["encrypt", "decrypt"]);
+async function encryptPayload(obj) {
+  const iv = rnd(12), key = await importKey(SY.k);
+  const data = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, te.encode(JSON.stringify(obj)));
+  return JSON.stringify({ app: "lehrerplaner", v: 1, salt: SY.salt, iv: b64(iv), data: b64(data) });
+}
+async function decryptEnvelope(env, key) {
+  try {
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(env.iv) }, key, unb64(env.data));
+    return JSON.parse(tdc.decode(plain));
+  } catch (e) { throw Object.assign(new Error("Das Passwort passt nicht zur Datei in der Dropbox."), { kind: "pw" }); }
+}
+
+/* Dropbox: Anmeldung mit PKCE (kein Geheimnis im Code nötig), Zugriff nur auf den eigenen App-Ordner */
+const redirectUri = () => location.origin + location.pathname.replace(/index\.html$/, "");
+async function dbxLogin() {
+  const verifier = b64url(rnd(48)), state = b64url(rnd(12));
+  const challenge = b64url(await crypto.subtle.digest("SHA-256", te.encode(verifier)));
+  SY.pkce = { verifier, state }; persistSync();
+  location.href = "https://www.dropbox.com/oauth2/authorize?" + new URLSearchParams({ client_id: appKey(), response_type: "code", code_challenge: challenge,
+    code_challenge_method: "S256", token_access_type: "offline", redirect_uri: redirectUri(), state }).toString();
+}
+async function tokenCall(params) {
+  let r;
+  try { r = await fetch("https://api.dropboxapi.com/oauth2/token", { method: "POST", body: new URLSearchParams(Object.assign({ client_id: appKey() }, params)) }); }
+  catch (e) { throw Object.assign(new Error("Keine Internetverbindung."), { kind: "net" }); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error("Dropbox hat die Anmeldung abgelehnt. Bitte neu verbinden."), { kind: "auth" });
+  SY.token = j.access_token; SY.exp = Date.now() + (j.expires_in || 14400) * 1000;
+  if (j.refresh_token) SY.refresh = j.refresh_token;
+  persistSync();
+}
+async function dbxFinish(code, state) {
+  const p = SY.pkce; delete SY.pkce;
+  if (!p || p.state !== state) { persistSync(); throw new Error("Die Anmeldung ist abgelaufen. Bitte noch einmal verbinden."); }
+  await tokenCall({ grant_type: "authorization_code", code, code_verifier: p.verifier, redirect_uri: redirectUri() });
+}
+async function token() {
+  if (SY.token && SY.exp > Date.now() + 60000) return SY.token;
+  await tokenCall({ grant_type: "refresh_token", refresh_token: SY.refresh });
+  return SY.token;
+}
+async function dbx(url, opt) {
+  for (let i = 0; i < 2; i++) {
+    let r;
+    try { r = await fetch(url, Object.assign({}, opt, { headers: Object.assign({ Authorization: "Bearer " + await token() }, opt.headers) })); }
+    catch (e) { if (e.kind) throw e; throw Object.assign(new Error("Keine Internetverbindung."), { kind: "net" }); }
+    if (r.status === 401 && i === 0) { SY.exp = 0; continue; }
+    if (r.status === 401) throw Object.assign(new Error("Dropbox hat die Anmeldung abgelehnt. Bitte neu verbinden."), { kind: "auth" });
+    return r;
+  }
+}
+async function dbxDownload() {
+  const r = await dbx("https://content.dropboxapi.com/2/files/download", { method: "POST", headers: { "Dropbox-API-Arg": JSON.stringify({ path: DBX_FILE }) } });
+  if (r.status === 409) return null;
+  if (!r.ok) throw Object.assign(new Error("Dropbox antwortet gerade nicht (" + r.status + ")."), { kind: "net" });
+  const text = await r.text();
+  let rev = null;
+  try { rev = JSON.parse(r.headers.get("Dropbox-API-Result")).rev; } catch (e) {}
+  if (!rev) {
+    const m = await dbx("https://api.dropboxapi.com/2/files/get_metadata", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: DBX_FILE }) });
+    rev = (await m.json()).rev;
+  }
+  return { text, rev };
+}
+async function dbxUpload(text, rev) {
+  const mode = rev ? { ".tag": "update", update: rev } : { ".tag": "add" };
+  const r = await dbx("https://content.dropboxapi.com/2/files/upload", { method: "POST",
+    headers: { "Content-Type": "application/octet-stream", "Dropbox-API-Arg": JSON.stringify({ path: DBX_FILE, mode, autorename: false, mute: true }) }, body: text });
+  if (r.status === 409) return false;   /* ein anderes Gerät war schneller: neu laden und noch einmal */
+  if (!r.ok) throw Object.assign(new Error("Hochladen hat nicht geklappt (" + r.status + ")."), { kind: "net" });
+  return true;
+}
+
+let syncing = false, syncAgain = false, syncT, pendingRender = false;
+function syncSoon(ms = 4000) { if (!syncReady()) return; clearTimeout(syncT); syncT = setTimeout(sync, ms); }
+function typing() { const a = document.activeElement; return a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.type !== "checkbox"; }
+function refreshView() { if (typing()) pendingRender = true; else rerender(); }
+async function sync() {
+  if (!syncReady() || window.self !== window.top) return;
+  if (syncing) { syncAgain = true; return; }
+  syncing = true; SYNC.state = "run"; clearTimeout(saveT);
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  try {
+    for (let i = 0; i < 4; i++) {
+      stamp();
+      const rem = await dbxDownload();
+      let need = true, changed = false;
+      if (rem) {
+        const env = JSON.parse(rem.text);
+        if (env.salt !== SY.salt) throw Object.assign(new Error("In der Dropbox liegt eine Datei mit anderem Passwort. Bitte trennen und neu verbinden."), { kind: "pw" });
+        const res = applyRemote(await decryptEnvelope(env, await importKey(SY.k)));
+        need = res.needUpload; changed = res.changed;
+      }
+      if (changed) refreshView();
+      if (!need || await dbxUpload(await encryptPayload({ flat: SHADOW, stamps: STAMPS }), rem && rem.rev)) {
+        SY.last = Date.now(); persistSync(); SYNC.state = "ok"; SYNC.msg = ""; break;
+      }
+    }
+  } catch (e) { SYNC.state = "err"; SYNC.kind = e.kind || "other"; SYNC.msg = e.message; }
+  syncing = false;
+  if (UI.view === "mehr" && UI.mehr === "sync") refreshView();
+  if (syncAgain) { syncAgain = false; syncSoon(500); }
+}
+window.addEventListener("online", () => syncSoon(500));
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") syncSoon(300); });
+document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !typing()) { pendingRender = false; rerender(); } }, 50));
+setInterval(() => { if (document.visibilityState === "visible") syncSoon(0); }, 120000);
+
+function syncLabel() {
+  if (!syncReady()) return "Dropbox, verschlüsselt";
+  if (SYNC.state === "err") return SYNC.kind === "net" ? "Offline, wird nachgeholt" : "Bitte prüfen";
+  if (!SY.last) return "Verbunden";
+  const d = new Date(SY.last);
+  return "Zuletzt abgeglichen " + (todayIsoOf(d) === todayIso() ? "heute" : "am " + fmtShort(todayIsoOf(d))) + " um " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + " Uhr";
+}
+const todayIsoOf = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+
+async function checkRemote() {
+  UI.remote = "check";
+  try { UI.remote = (await dbxDownload()) || { none: true }; } catch (e) { UI.remote = { err: e.message }; }
+  rerender();
+}
+async function setPassword(pw, pw2) {
+  const r = UI.remote;
+  if (r && r.text) {
+    const env = JSON.parse(r.text);
+    toast("Passwort wird geprüft …");
+    const key = await deriveKey(pw, unb64(env.salt));
+    let payload;
+    try { payload = await decryptEnvelope(env, key); } catch (e) { toast(e.message); return; }
+    SY.k = b64(await crypto.subtle.exportKey("raw", key)); SY.salt = env.salt; persistSync();
+    if (localIsEmpty()) adoptFlat(payload.flat, payload.stamps); else applyRemote(payload);
+  } else {
+    if (pw.length < 8) { toast("Bitte mindestens 8 Zeichen"); return; }
+    if (pw !== pw2) { toast("Die beiden Passwörter sind nicht gleich"); return; }
+    const salt = rnd(16), key = await deriveKey(pw, salt);
+    SY.k = b64(await crypto.subtle.exportKey("raw", key)); SY.salt = b64(salt); persistSync();
+  }
+  UI.remote = null; toast("Abgleich eingerichtet");
+  render(); sync();
+}
+function renderSync(back) {
+  const framed = window.self !== window.top;
+  const head = `<div class="head"><div>${back}<h1>Geräte abgleichen</h1><div class="sub">PC, Tablet und Handy mit demselben Stand</div></div></div>`;
+  const intro = `<section class="card"><h2>So funktioniert es</h2><p style="margin:0">Jedes Gerät speichert alles bei sich und funktioniert auch ohne Internet. Sobald Netz da ist, gleicht es sich über deine Dropbox ab. Dort liegt nur eine verschlüsselte Datei, die ohne dein Passwort niemand lesen kann, auch Dropbox nicht.</p></section>`;
+  let body;
+  if (framed) body = `<p style="margin:0">In dieser Vorschau geht der Abgleich nicht. Öffne die App über ihre eigene Adresse oder vom Startbildschirm.</p>`;
+  else if (!appKey()) body = `<h2>Dropbox-App-Schlüssel</h2><form class="form" data-f="dbx-key"><label>App-Key aus der Dropbox-App-Konsole<input type="text" id="dbx-key" autocomplete="off" spellcheck="false"></label><div><button class="btn primary" type="submit">Speichern</button></div></form>`;
+  else if (!SY.refresh) body = `<h2>Schritt 1: Dropbox verbinden</h2><p>Die App bekommt nur Zugriff auf ihren eigenen Ordner in deiner Dropbox, sonst auf nichts.</p><button class="btn primary" data-a="dbx-login">Mit Dropbox verbinden</button>`;
+  else if (!SY.k) {
+    if (!UI.remote) { setTimeout(checkRemote, 0); UI.remote = "check"; }
+    if (UI.remote === "check") body = `<p class="muted" style="margin:0">Dropbox wird geprüft …</p>`;
+    else if (UI.remote.err) body = `<p>${esc(UI.remote.err)}</p><button class="btn" data-a="dbx-recheck">Noch einmal versuchen</button>`;
+    else if (UI.remote.text) body = `<h2>Schritt 2: Passwort eingeben</h2><p>In deiner Dropbox liegen schon Daten von einem anderen Gerät. Gib dasselbe Passwort ein wie dort.${localIsEmpty() ? "" : " Was auf diesem Gerät schon eingetragen ist, wird mit übernommen."}</p>
+      <form class="form" data-f="dbx-pw"><label>Passwort<input type="password" id="pw1" autocomplete="current-password" required></label><div><button class="btn primary" type="submit">Abgleichen</button></div></form>`;
+    else body = `<h2>Schritt 2: Passwort festlegen</h2><p>Mit diesem Passwort werden deine Daten verschlüsselt. Du brauchst es auf jedem weiteren Gerät. <b>Schreib es dir auf.</b> Wenn es verloren geht, kann niemand die Daten in der Dropbox wiederherstellen. Auf deinen Geräten bleiben sie aber erhalten.</p>
+      <form class="form" data-f="dbx-pw"><label>Passwort (mindestens 8 Zeichen)<input type="password" id="pw1" autocomplete="new-password" required></label><label>Passwort wiederholen<input type="password" id="pw2" autocomplete="new-password" required></label><div><button class="btn primary" type="submit">Verschlüsselung einrichten</button></div></form>`;
+  } else {
+    const err = SYNC.state === "err" ? `<p class="note" style="margin:0 0 10px">${esc(SYNC.msg)}</p>` : "";
+    body = `<h2>Abgleich ist eingerichtet</h2>${err}<p>${SYNC.state === "run" ? "Gleicht gerade ab …" : esc(syncLabel())}</p>
+      <div class="ctrl"><button class="btn primary" data-a="sync-now">Jetzt abgleichen</button>${confirmBtn("dbx-off", "Dieses Gerät trennen", "dbx-off")}</div>
+      <p class="small muted">Trennen beendet nur den Abgleich auf diesem Gerät. Deine Einträge bleiben hier und in der Dropbox erhalten.</p>`;
+  }
+  return head + `<div class="stack">${intro}<section class="card">${body}</section></div>`;
+}
+
+/* ---------------------------------------------------------- Rendern & Ereignisse */
+function render() {
+  renderNav();
+  const v = UI.view;
+  $("main").innerHTML = v === "heute" ? renderHeute() : v === "woche" ? renderWoche() : v === "kalender" ? renderKalender() : v === "klassen" ? renderKlassen() : renderMehr();
+}
+function go(view, keepScroll) {
+  UI.view = view; UI.confirm = null;
+  try { history.replaceState(null, "", "#" + view); } catch (e) {}
+  render(); if (!keepScroll) window.scrollTo(0, 0);
+}
+function rerender() { const y = window.scrollY, f = document.activeElement && document.activeElement.id; render(); window.scrollTo(0, y); if (f && $(f)) $(f).focus({ preventScroll: true }); }
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-a]"); if (!b) return;
+  const a = b.dataset.a, k = UI.kid && S.klassen[UI.kid];
+  if (a !== "ask" && a !== "cancel") UI.confirm = UI.confirm && ["imp", "reset"].includes(a) ? UI.confirm : null;
+  switch (a) {
+    case "view": if (b.dataset.v === "klassen" && UI.view === "klassen") UI.kid = null; if (b.dataset.v === "mehr" && UI.view === "mehr") UI.mehr = null; go(b.dataset.v); break;
+    case "day": UI.sel = add(UI.sel, +b.dataset.n); rerender(); break;
+    case "week": UI.sel = add(UI.sel, +b.dataset.n); rerender(); break;
+    case "today": UI.sel = todayIso(); rerender(); break;
+    case "go": UI.sel = b.dataset.d; go("heute"); break;
+    case "anw": UI.kid = b.dataset.k; UI.ktab = "anw"; UI.anwDate = UI.sel; go("klassen"); break;
+    case "auf-del": day(UI.sel).auf.splice(+b.dataset.i, 1); save(); rerender(); break;
+    case "kl": UI.kid = b.dataset.k || null; UI.ktab = "schueler"; go("klassen"); break;
+    case "ktab": UI.ktab = b.dataset.t; rerender(); break;
+    case "ask": UI.confirm = b.dataset.q; rerender(); break;
+    case "cancel": UI.confirm = null; rerender(); break;
+    case "s-del": { const sid = b.dataset.s; delete k.s[sid]; k.sOrder = k.sOrder.filter(x => x !== sid); UI.confirm = null; save(); rerender(); break; }
+    case "l-del": { const l = b.dataset.l; delete k.leist[l]; delete k.noten[l]; k.lOrder = k.lOrder.filter(x => x !== l); save(); rerender(); break; }
+    case "k-del": delete S.klassen[UI.kid]; S.kOrder = S.kOrder.filter(x => x !== UI.kid);
+      for (const p in S.plan) if (S.plan[p].kid === UI.kid) S.plan[p].kid = ""; UI.kid = null; UI.confirm = null; save(); go("klassen"); toast("Klasse gelöscht"); break;
+    case "anw-cycle": { const d = UI.anwDate, sid = b.dataset.s, f = (k.fehl[d] ||= {}); const nx = { "": "e", e: "u", u: "v", v: "" }[f[sid] || ""];
+      if (nx) f[sid] = nx; else delete f[sid]; if (!Object.keys(f).length) delete k.fehl[d]; save(); rerender(); break; }
+    case "anw-day": UI.anwDate = add(UI.anwDate, +b.dataset.n); rerender(); break;
+    case "mehr": UI.mehr = b.dataset.m || null; go("mehr"); break;
+    case "pday": UI.planDay = +b.dataset.w; rerender(); break;
+    case "exp": UI.export = JSON.stringify(S); rerender(); break;
+    case "copy": { const t = $("exp"); const done = () => toast("Kopiert");
+      if (navigator.clipboard) navigator.clipboard.writeText(UI.export).then(done, () => { t.select(); toast("Text markiert, bitte selbst kopieren"); });
+      else { t.select(); toast("Text markiert, bitte selbst kopieren"); } break; }
+    case "dl": { const a2 = document.createElement("a"); a2.href = URL.createObjectURL(new Blob([UI.export], { type: "application/json" }));
+      a2.download = "lehrerplaner-sicherung-" + todayIso() + ".json"; a2.click(); break; }
+    case "imp": {
+      const txt = ($("imp").value || "").trim(); UI.confirm = null;
+      const apply = raw => { try { const o = JSON.parse(raw); if (!o || o.v !== 1 || !o.klassen) throw 0; S = Object.assign(blank(), o); save(); toast("Sicherung eingespielt"); UI.mehr = null; go("heute"); }
+        catch (err) { toast("Das ist keine gültige Sicherung"); rerender(); } };
+      const file = $("imp-file").files[0];
+      if (file) file.text().then(apply); else if (txt) apply(txt); else { toast("Bitte Datei wählen oder Text einfügen"); rerender(); }
+      break; }
+    case "dbx-login": dbxLogin(); break;
+    case "dbx-recheck": UI.remote = null; rerender(); break;
+    case "sync-now": SYNC.state = "run"; rerender(); sync(); break;
+    case "dbx-off": SY = { appKey: SY.appKey }; persistSync(); UI.remote = null; SYNC.state = "idle"; toast("Abgleich auf diesem Gerät beendet"); rerender(); break;
+    case "reset": S = blank(); UI.confirm = null; UI.kid = null; save(); toast("Neu begonnen"); render(); break;
+  }
+});
+
+document.addEventListener("submit", e => {
+  const f = e.target.closest("form[data-f]"); if (!f) return; e.preventDefault();
+  const k = UI.kid && S.klassen[UI.kid];
+  switch (f.dataset.f) {
+    case "auf-add": { const v = $("auf-new").value.trim(); if (!v) return; day(UI.sel).auf.push({ t: v, done: false }); save(); rerender(); $("auf-new").focus(); break; }
+    case "kl-add": { const n = $("kl-name").value.trim(); if (!n) return; const id = uid("k"); S.klassen[id] = newKlasse(n, $("kl-fach").value.trim()); S.kOrder.push(id); save(); UI.kid = id; UI.ktab = "schueler"; go("klassen"); break; }
+    case "s-add": { const names = $("s-new").value.split(/\r?\n/).map(x => x.trim()).filter(Boolean); names.forEach(n => { const sid = uid("s"); k.s[sid] = { name: n, notiz: "" }; k.sOrder.push(sid); }); save(); rerender(); if (names.length) toast(names.length + (names.length === 1 ? " Name" : " Namen") + " hinzugefügt"); break; }
+    case "dbx-key": { const v = $("dbx-key").value.trim(); if (!v) return; SY.appKey = v; persistSync(); rerender(); break; }
+    case "dbx-pw": { const b = f.querySelector("button"); b.disabled = true; setPassword($("pw1").value, $("pw2") ? $("pw2").value : "").finally(() => { if (b.isConnected) b.disabled = false; }); break; }
+    case "l-add": { const t = $("l-t").value.trim(); if (!t) return; const l = uid("l"); k.leist[l] = { titel: t, datum: $("l-d").value, gew: $("l-g").value }; k.lOrder.push(l); k.noten[l] = {}; save(); rerender(); break; }
+  }
+});
+
+document.addEventListener("input", e => {
+  const el = e.target;
+  if (el.dataset.u) { if (el.value) { UI[el.dataset.u] = el.value; rerender(); } return; }
+  if (!el.dataset.p) return;
+  setPath(el.dataset.p, el.type === "checkbox" ? el.checked : el.value);
+  saveSoon();
+  const after = el.dataset.after, k = UI.kid && S.klassen[UI.kid];
+  if (after === "rerender") { save(); rerender(); }
+  else if (after === "avg" && k) {
+    const [, , , l, sid] = el.dataset.p.split("|");
+    $("avg-" + sid).textContent = fmtAvg(studentAvg(k, sid));
+    $("lavg-" + l).textContent = fmtAvg(leistAvg(k, l));
+    $("kavg").textContent = fmtAvg(klasseAvg(k));
+    el.style.color = el.value && gval(el.value) == null ? "var(--warn)" : "";
+  } else if (after === "planfach") {
+    const [, key] = el.dataset.p.split("|"), e2 = S.plan[key], kl = S.klassen[e2.kid];
+    if (kl && !e2.fach) { e2.fach = kl.fach; const inp = $("pf-" + key); if (inp) inp.value = kl.fach; }
+  }
+});
+
+load();
+stamp();
+const q0 = new URLSearchParams(location.search);
+if (q0.get("code") || q0.get("error")) {
+  try { history.replaceState(null, "", redirectUri() + "#mehr"); } catch (e) {}
+  UI.view = "mehr"; UI.mehr = "sync";
+  if (q0.get("code")) dbxFinish(q0.get("code"), q0.get("state")).then(() => rerender(), e => { toast(e.message); rerender(); });
+  else toast("Verbindung mit Dropbox abgebrochen");
+}
+const h0 = (location.hash || "").slice(1);
+if (VIEWS.some(v => v[0] === h0) && !UI.mehr) UI.view = h0;
+render();
+syncSoon(500);
+if ("serviceWorker" in navigator && window.self === window.top && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
