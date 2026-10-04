@@ -137,6 +137,14 @@ input.inline:hover,textarea.inline:hover{border-color:var(--line)}
 .tabs button[aria-selected="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--accent)}
 .list{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
 .kcard{text-align:left;cursor:pointer;display:grid;gap:4px}
+.kc{border-left:5px solid var(--kc,transparent)}
+.kcard.kc{padding-left:14px}
+.lesson.kc{padding-left:10px;margin-left:-15px}
+.wl.kc{padding-left:6px;border-left-width:4px}
+.kdot{display:inline-block;width:.7em;height:.7em;border-radius:50%;background:var(--kc);margin-right:6px;vertical-align:.05em}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatches button{width:34px;height:34px;border-radius:50%;border:2px solid var(--surface);background:var(--kc);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.swatches button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--ink)}
 .kcard:hover{border-color:var(--accent)}
 .kcard b{font-family:var(--f-display);font-size:1.4rem}
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -277,6 +285,10 @@ const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(
 function blank() {
   return { v: 1, beispiel: false, settings: { bewegl: "" }, zeiten: ZEITEN.map(z => z.slice()), plan: {}, klassen: {}, kOrder: [], tage: {}, check: {}, eigene: {} };
 }
+const FARBEN = [["blau", "#3B82C4", "Blau"], ["gruen", "#3E9A5B", "Grün"], ["orange", "#E08A2E", "Orange"], ["rot", "#D2493F", "Rot"], ["lila", "#8A5CC2", "Lila"],
+  ["tuerkis", "#2A9CA5", "Türkis"], ["gelb", "#CFA824", "Gelb"], ["pink", "#D35A97", "Pink"], ["braun", "#9A6B45", "Braun"], ["grau", "#7A8394", "Grau"]];
+const FARBE = Object.fromEntries(FARBEN.map(f => [f[0], f[1]]));
+function freeFarbe(st) { const used = Object.values(st.klassen).map(k => k.farbe); return (FARBEN.find(f => !used.includes(f[0])) || FARBEN[Object.keys(st.klassen).length % FARBEN.length])[0]; }
 function newKlasse(name, fach) {
   return { name, fach, s: {}, sOrder: [], leist: {}, lOrder: [], noten: {}, fehl: {}, sitz: { rows: 5, cols: 8, seats: {} }, notizen: "" };
 }
@@ -285,7 +297,7 @@ function sample() {
   const mk = (id, name, fach, names) => {
     const k = newKlasse(name, fach);
     names.forEach((n, i) => { const sid = id + "s" + i; k.s[sid] = { name: n, notiz: "" }; k.sOrder.push(sid); });
-    st.klassen[id] = k; st.kOrder.push(id); return k;
+    k.farbe = freeFarbe(st); st.klassen[id] = k; st.kOrder.push(id); return k;
   };
   const a = mk("k7a", "7a", "Mathematik", ["Lena Hoffmann", "Paul Krüger", "Emma Schulz", "Jonas Wagner", "Sophie Richter", "Ben Neumann", "Marie Lehmann", "Finn Schmidt"]);
   mk("k9b", "9b", "Physik", ["Clara Fischer", "Lukas Weber", "Hannah Becker", "Elias Wolf", "Mila Schröder", "Noah Braun"]);
@@ -326,8 +338,10 @@ function normalize() {
   for (const f in b) if (S[f] == null) S[f] = b[f];
   if (!Array.isArray(S.zeiten) || S.zeiten.length !== 8) S.zeiten = ZEITEN.map((z, i) => (S.zeiten && S.zeiten[i]) || z.slice());
   const fixOrder = (order, map) => { const o = (Array.isArray(order) ? order : []).filter((x, i, a) => map[x] && a.indexOf(x) === i); for (const x in map) if (!o.includes(x)) o.push(x); return o; };
-  for (const id in S.klassen) {
-    const k = S.klassen[id], d = newKlasse("", "");
+  for (const id of S.kOrder.concat(Object.keys(S.klassen))) {
+    const k = S.klassen[id]; if (!k) continue;
+    if (!FARBE[k.farbe]) k.farbe = freeFarbe(S);
+    const d = newKlasse("", "");
     for (const f in d) if (k[f] == null) k[f] = d[f];
     if (!k.sitz.seats) k.sitz.seats = {};
     for (const sid in k.s) if (k.s[sid].name == null) k.s[sid].name = "";
@@ -407,6 +421,7 @@ function banner() {
 }
 
 function klName(kid) { const k = S.klassen[kid]; return k ? k.name : ""; }
+function kc(kid) { const k = S.klassen[kid], c = k && FARBE[k.farbe]; return c ? ` kc" style="--kc:${c}` : ""; }
 function lessonOf(s, n) { return S.plan[wd(s) + "-" + n]; }
 
 /* ---------------------------------------------------------- Tag */
@@ -435,7 +450,7 @@ function renderHeute() {
         rows += `<div class="lesson empty"><div class="n">${n}.${tm}</div><div class="what muted small">frei</div></div>`;
         continue;
       }
-      rows += `<div class="lesson"><div class="n">${n}.${tm}</div><div>
+      rows += `<div class="lesson${kc(e.kid)}"><div class="n">${n}.${tm}</div><div>
         <div class="what"><strong>${esc(klName(e.kid))} ${esc(e.fach)}</strong><span class="muted">Raum ${esc(e.raum || "–")}</span>
         ${e.kid && S.klassen[e.kid] ? `<button class="btn quiet" data-a="anw" data-k="${e.kid}">Anwesenheit</button>` : ""}</div>
         <textarea id="st-${n}" class="inline" data-p="tage|${d}|st|${n}" placeholder="Thema, Hausaufgabe, Notiz">${esc(t.st && t.st[n])}</textarea></div></div>`;
@@ -473,7 +488,7 @@ function renderWoche() {
       for (let n = 1; n <= 8; n++) {
         const e = lessonOf(d, n); if (!e || !e.kid && !e.fach) continue;
         const topic = t.st && t.st[n];
-        body += `<div class="wl"><b>${n}</b><div><div>${esc(klName(e.kid))} ${esc(e.fach)}</div>${topic ? `<div class="t">${esc(topic)}</div>` : ""}</div></div>`;
+        body += `<div class="wl${kc(e.kid)}"><b>${n}</b><div><div>${esc(klName(e.kid))} ${esc(e.fach)}</div>${topic ? `<div class="t">${esc(topic)}</div>` : ""}</div></div>`;
       }
       if (!body) body = '<div class="muted small">Keine Stunden eingetragen</div>';
     } else body = `<span class="pill st-${st}">${esc(label)}</span>`;
@@ -510,7 +525,7 @@ function renderKlassen() {
   if (UI.kid && S.klassen[UI.kid]) return renderKlasse(S.klassen[UI.kid]);
   const cards = S.kOrder.map(id => {
     const k = S.klassen[id], a = klasseAvg(k);
-    return `<button class="card kcard" data-a="kl" data-k="${id}"><b>${esc(k.name)}</b><span>${esc(k.fach)}</span><span class="muted small">${k.sOrder.length} Schüler·innen · Ø ${fmtAvg(a)}</span></button>`;
+    return `<button class="card kcard${kc(id)}" data-a="kl" data-k="${id}"><b>${esc(k.name)}</b><span>${esc(k.fach)}</span><span class="muted small">${k.sOrder.length} Schüler·innen · Ø ${fmtAvg(a)}</span></button>`;
   }).join("");
   return banner() + `<div class="head"><div><h1>Klassen</h1><div class="sub">Schülerlisten, Noten, Anwesenheit und Sitzplan</div></div></div>
     <div class="stack">${cards ? `<div class="list">${cards}</div>` : '<p class="muted">Noch keine Klasse angelegt.</p>'}
@@ -523,7 +538,7 @@ function renderKlasse(k) {
   const id = UI.kid;
   const tabs = [["schueler", "Schüler·innen"], ["noten", "Noten"], ["anw", "Anwesenheit"], ["sitz", "Sitzplan"], ["notiz", "Notizen"]];
   let h = banner() + `<div class="head"><div><button class="btn quiet" data-a="kl" data-k="" style="padding-left:0">‹ Alle Klassen</button>
-    <h1>${esc(k.name)} · ${esc(k.fach)}</h1><div class="sub">${k.sOrder.length} Schüler·innen · Klassenschnitt ${fmtAvg(klasseAvg(k))}</div></div></div>
+    <h1><span class="kdot" style="--kc:${FARBE[k.farbe]}"></span>${esc(k.name)} · ${esc(k.fach)}</h1><div class="sub">${k.sOrder.length} Schüler·innen · Klassenschnitt ${fmtAvg(klasseAvg(k))}</div></div></div>
     <div class="tabs" role="tablist">${tabs.map(([t, l]) => `<button role="tab" aria-selected="${UI.ktab === t}" data-a="ktab" data-t="${t}">${l}</button>`).join("")}</div>`;
   if (UI.ktab === "schueler") {
     const rows = k.sOrder.map((sid, i) => `<div class="srow"><span class="nr">${i + 1}</span><div class="sfields">
@@ -532,6 +547,7 @@ function renderKlasse(k) {
       ${UI.confirm === "s" + sid ? `<span class="confirm"><button class="btn danger" data-a="s-del" data-s="${sid}">Löschen</button><button class="btn" data-a="cancel">Nein</button></span>` : `<button class="x" data-a="ask" data-q="s${sid}" aria-label="Entfernen">×</button>`}</div>`).join("");
     h += `<div class="cols"><section class="card">${rows || '<p class="muted">Noch niemand eingetragen.</p>'}</section>
       <section class="card"><h2>Namen hinzufügen</h2><form class="form" data-f="s-add"><label>Einen Namen pro Zeile, auch aus einer Liste einfügen<textarea id="s-new" rows="6" placeholder="Anna Muster&#10;Ben Beispiel"></textarea></label><button class="btn primary" type="submit">Hinzufügen</button></form>
+      <h2 style="margin-top:20px">Farbe</h2><div class="swatches">${FARBEN.map(([f, c, l]) => `<button style="--kc:${c}" data-a="kfarbe" data-c="${f}" aria-pressed="${k.farbe === f}" aria-label="${l}" title="${l}"></button>`).join("")}</div>
       <div style="margin-top:16px">${confirmBtn("kdel", "Klasse löschen", "k-del")}</div></section></div>`;
   } else if (UI.ktab === "noten") {
     const head = k.lOrder.map(l => { const L = k.leist[l]; return `<th class="c">${esc(L.titel)}<br><span class="muted" style="font-weight:400">${L.datum ? fmtShort(L.datum) : ""} · ×${esc(L.gew)}</span>${UI.confirm === "l" + l ? `<br><button class="btn danger" data-a="l-del" data-l="${l}">Löschen</button>` : `<br><button class="x" data-a="ask" data-q="l${l}" aria-label="Leistung löschen">×</button>`}</th>`; }).join("");
@@ -926,6 +942,7 @@ document.addEventListener("click", e => {
     case "auf-del": day(UI.sel).auf.splice(+b.dataset.i, 1); save(); rerender(); break;
     case "kl": UI.kid = b.dataset.k || null; UI.ktab = "schueler"; go("klassen"); break;
     case "ktab": UI.ktab = b.dataset.t; rerender(); break;
+    case "kfarbe": if (FARBE[b.dataset.c]) { k.farbe = b.dataset.c; save(); rerender(); } break;
     case "ask": UI.confirm = b.dataset.q; rerender(); break;
     case "cancel": UI.confirm = null; rerender(); break;
     case "s-del": { const sid = b.dataset.s; delete k.s[sid]; k.sOrder = k.sOrder.filter(x => x !== sid); UI.confirm = null; save(); rerender(); break; }
@@ -963,7 +980,7 @@ document.addEventListener("submit", e => {
   const k = UI.kid && S.klassen[UI.kid];
   switch (f.dataset.f) {
     case "auf-add": { const v = $("auf-new").value.trim(); if (!v) return; day(UI.sel).auf.push({ t: v, done: false }); save(); rerender(); $("auf-new").focus(); break; }
-    case "kl-add": { const n = $("kl-name").value.trim(); if (!n) return; const id = uid("k"); S.klassen[id] = newKlasse(n, $("kl-fach").value.trim()); S.kOrder.push(id); save(); UI.kid = id; UI.ktab = "schueler"; go("klassen"); break; }
+    case "kl-add": { const n = $("kl-name").value.trim(); if (!n) return; const id = uid("k"); const nk = newKlasse(n, $("kl-fach").value.trim()); nk.farbe = freeFarbe(S); S.klassen[id] = nk; S.kOrder.push(id); save(); UI.kid = id; UI.ktab = "schueler"; go("klassen"); break; }
     case "s-add": { const names = $("s-new").value.split(/\r?\n/).map(x => x.trim()).filter(Boolean); names.forEach(n => { const sid = uid("s"); k.s[sid] = { name: n, notiz: "" }; k.sOrder.push(sid); }); save(); rerender(); if (names.length) toast(names.length + (names.length === 1 ? " Name" : " Namen") + " hinzugefügt"); break; }
     case "dbx-key": { const v = $("dbx-key").value.trim(); if (!v) return; SY.appKey = v; persistSync(); rerender(); break; }
     case "dbx-pw": { const b = f.querySelector("button"); b.disabled = true; setPassword($("pw1").value, $("pw2") ? $("pw2").value : "").finally(() => { if (b.isConnected) b.disabled = false; }); break; }
