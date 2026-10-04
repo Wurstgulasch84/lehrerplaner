@@ -1,0 +1,18 @@
+configuration:
+  github_token:
+    name: GitHub-Zugangsschlüssel
+    description: Nur-Lese-Schlüssel für das private Repository „pinnwand“. Damit holt sich das Add-on den Programmcode und Updates.
+  branch:
+    name: Zweig
+    description: Welcher Programmstand geladen wird. Normalerweise „main“.
+  public_url:
+    name: Öffentliche Adresse
+    description: Adresse für Freigabe-Links und QR-Codes, z. B. http://192.168.178.65:3190. Leer lassen, dann wird die Adresse aus dem Browser genommen.
+  link_previews:
+    name: Link-Vorschau
+    description: Vorschaubilder und Titel für Links auf Karten abrufen.
+  max_upload_mb:
+    name: Größte Datei (MB)
+    description: Maximale Größe einer hochgeladenen Datei.
+network:
+  3190/tcp: Pinnwand im Browser
