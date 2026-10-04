@@ -266,7 +266,8 @@ function nextBreak(s) {
 }
 
 /* ---------------------------------------------------------- Daten */
-const KEY = "lehrerplaner.sachsen.v1";
+const DEMO = new URLSearchParams(location.search).has("demo");
+const KEY = "lehrerplaner.sachsen.v1" + (DEMO ? ".demo" : "");
 const ZEITEN = [["07:30", "08:15"], ["08:25", "09:10"], ["09:30", "10:15"], ["10:25", "11:10"], ["11:30", "12:15"], ["12:25", "13:10"], ["13:20", "14:05"], ["14:15", "15:00"]];
 let S = null, storageOk = true;
 const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -281,6 +282,8 @@ function freeFarbe(st) { const used = Object.values(st.klassen).map(k => k.farbe
 function newKlasse(name, fach) {
   return { name, fach, s: {}, sOrder: [], leist: {}, lOrder: [], noten: {}, fehl: {}, sitz: { rows: 5, cols: 8, seats: {} }, notizen: "" };
 }
+/* Erster Schultag ab heute (für Beispieldaten, die zur aktuellen Woche passen) */
+function demoDay() { const t = todayIso(); return SCHOOLDAYS.find(d => d >= t) || SCHOOLDAYS[SCHOOLDAYS.length - 1]; }
 function sample() {
   const st = blank(); st.beispiel = true;
   const mk = (id, name, fach, names) => {
@@ -288,23 +291,50 @@ function sample() {
     names.forEach((n, i) => { const sid = id + "s" + i; k.s[sid] = { name: n, notiz: "" }; k.sOrder.push(sid); });
     k.farbe = freeFarbe(st); st.klassen[id] = k; st.kOrder.push(id); return k;
   };
-  const a = mk("k7a", "7a", "Mathematik", ["Lena Hoffmann", "Paul Krüger", "Emma Schulz", "Jonas Wagner", "Sophie Richter", "Ben Neumann", "Marie Lehmann", "Finn Schmidt"]);
-  mk("k9b", "9b", "Physik", ["Clara Fischer", "Lukas Weber", "Hannah Becker", "Elias Wolf", "Mila Schröder", "Noah Braun"]);
+  const a = mk("k7a", "7a", "Mathematik", ["Lena Hoffmann", "Paul Krüger", "Emma Schulz", "Jonas Wagner", "Sophie Richter", "Ben Neumann", "Marie Lehmann", "Finn Schmidt", "Lea Zimmermann", "Tim Hartmann", "Anna Krause", "Luis Meier"]);
+  const b = mk("k9b", "9b", "Physik", ["Clara Fischer", "Lukas Weber", "Hannah Becker", "Elias Wolf", "Mila Schröder", "Noah Braun", "Ida Keller", "Moritz Lange", "Frieda Vogel", "Jakob Schuster"]);
+  const c = mk("k5c", "5c", "Mathematik", ["Mia Koch", "Leon Bauer", "Lina Richter", "Felix Klein", "Ella Wolff", "Henry Schäfer", "Emilia Frank", "Theo Berger", "Greta Haas"]);
+  const e = mk("k10a", "10a", "Physik", ["Johanna Pohl", "Maximilian Roth", "Sarah Ludwig", "David Simon", "Laura Kühn", "Niklas Graf", "Amelie Busch", "Erik Horn"]);
   a.s.k7as2.notiz = "Nachteilsausgleich: 10 Min. mehr Zeit";
-  [["l1", "Test Brüche", "2026-09-10", "1"], ["l2", "Klassenarbeit 1", "2026-09-24", "2"], ["l3", "Mündlich", "2026-09-30", "1"]]
-    .forEach(([id, t, d, g]) => { a.leist[id] = { titel: t, datum: d, gew: g }; a.lOrder.push(id); a.noten[id] = {}; });
-  const g = [["2", "3", "2-"], ["1", "2+", "1"], ["3", "3-", "2"], ["4", "3", "3"], ["2+", "2", "2"], ["3", "4", "3+"], ["1-", "1", "1"], ["2", "2-", "3"]];
-  a.sOrder.forEach((sid, i) => ["l1", "l2", "l3"].forEach((l, j) => { a.noten[l][sid] = g[i][j]; }));
-  a.fehl["2026-09-29"] = { k7as3: "e", k7as5: "v" };
-  a.fehl["2026-10-01"] = { k7as3: "u" };
-  a.sitz.seats = { "0-1": "k7as0", "0-2": "k7as1", "1-0": "k7as2", "1-1": "k7as3", "2-4": "k7as4", "2-5": "k7as5", "3-2": "k7as6", "3-3": "k7as7" };
-  a.notizen = "Wandertag 9. Oktober: Elternbrief bis 5.10. zurück.";
-  const P = { "0-1": ["k7a", "Mathematik", "204"], "0-2": ["k7a", "Mathematik", "204"], "0-4": ["k9b", "Physik", "Ph 1"],
-    "1-3": ["k7a", "Mathematik", "204"], "1-5": ["k9b", "Physik", "Ph 1"], "1-6": ["k9b", "Physik", "Ph 1"],
-    "2-2": ["k7a", "Mathematik", "204"], "3-1": ["k9b", "Physik", "Ph 1"], "3-4": ["k7a", "Mathematik", "204"], "4-3": ["k7a", "Mathematik", "112"] };
+  b.s.k9bs4.notiz = "Mutter bitte nur per E-Mail kontaktieren";
+  c.s.k5cs1.notiz = "LRS, Förderplan liegt vor";
+  const gr = ["1", "1-", "2+", "2", "2-", "3+", "3", "3-", "4", "2", "3", "2"];
+  const leist = (k, list) => list.forEach(([id, t, d, g], j) => {
+    k.leist[id] = { titel: t, datum: d, gew: g }; k.lOrder.push(id); k.noten[id] = {};
+    k.sOrder.forEach((sid, i) => { k.noten[id][sid] = gr[(i * 5 + j * 3) % gr.length]; });
+  });
+  leist(a, [["l1", "Test Brüche", "2026-09-10", "1"], ["l2", "Klassenarbeit 1", "2026-09-24", "2"], ["l3", "Mündlich", "2026-09-30", "1"]]);
+  leist(b, [["l1", "Kurzkontrolle Optik", "2026-09-08", "1"], ["l2", "Protokoll Linsen", "2026-09-22", "1"]]);
+  leist(c, [["l1", "Test Zahlenstrahl", "2026-09-15", "1"]]);
+  leist(e, [["l1", "Klassenarbeit Mechanik", "2026-09-29", "2"], ["l2", "Referat", "2026-09-17", "1"]]);
+  const seat = (k, R, C) => k.sOrder.forEach((sid, i) => { k.sitz.seats[`${Math.floor(i / C) % R}-${(i % C) * 2 % 8}`] = sid; });
+  [a, b, c, e].forEach(k => seat(k, 5, 4));
+  a.notizen = "Wandertag: Elternbrief bis Freitag zurück.\nKlassensprecherin: Sophie Richter";
+  b.notizen = "Schülerexperimente nur mit Schutzbrille.";
+  const P = { "0-1": ["k7a", "Mathematik", "204"], "0-2": ["k7a", "Mathematik", "204"], "0-4": ["k9b", "Physik", "Ph 1"], "0-5": ["k10a", "Physik", "Ph 1"],
+    "1-1": ["k5c", "Mathematik", "112"], "1-3": ["k7a", "Mathematik", "204"], "1-5": ["k9b", "Physik", "Ph 1"], "1-6": ["k9b", "Physik", "Ph 1"],
+    "2-2": ["k7a", "Mathematik", "204"], "2-3": ["k5c", "Mathematik", "112"], "2-4": ["k10a", "Physik", "Ph 2"],
+    "3-1": ["k9b", "Physik", "Ph 1"], "3-2": ["k5c", "Mathematik", "112"], "3-4": ["k7a", "Mathematik", "204"], "3-5": ["k10a", "Physik", "Ph 2"], "3-6": ["k10a", "Physik", "Ph 2"],
+    "4-1": ["k5c", "Mathematik", "112"], "4-3": ["k7a", "Mathematik", "112"] };
   for (const k in P) st.plan[k] = { kid: P[k][0], fach: P[k][1], raum: P[k][2] };
-  st.tage["2026-10-05"] = { st: { 1: "Prozentrechnung: Grundwert, Prozentwert, Prozentsatz", 2: "Übung S. 54 Nr. 3–7", 4: "Elektrischer Widerstand, Versuch" }, auf: [{ t: "Arbeitsblatt Prozentrechnung kopieren", done: false }, { t: "Elternbriefe Wandertag einsammeln", done: false }], notiz: "" };
-  st.tage["2026-10-02"] = { st: {}, auf: [{ t: "Klassenarbeit 7a korrigieren", done: true }], notiz: "" };
+  const THEMEN = { k7a: ["Prozentrechnung: Grundwert, Prozentwert, Prozentsatz", "Übung S. 54 Nr. 3–7", "Zinsrechnung Einstieg", "Vermischte Aufgaben, Wochenplan"],
+    k9b: ["Elektrischer Widerstand, Versuch", "Ohmsches Gesetz", "Reihenschaltung"], k5c: ["Große Zahlen lesen und schreiben", "Runden", "Zahlenstrahl, Partnerarbeit"],
+    k10a: ["Gleichförmige Bewegung", "Diagramme auswerten", "Freier Fall, Versuch"] };
+  const d0 = demoDay(), i0 = SCHOOLDAYS.indexOf(d0), cnt = {};
+  SCHOOLDAYS.slice(Math.max(0, i0 - 4), i0 + 6).forEach((d, j) => {
+    const t = { st: {}, auf: [], notiz: "" };
+    for (let n = 1; n <= 8; n++) { const l = st.plan[wd(d) + "-" + n]; if (!l) continue; const th = THEMEN[l.kid]; t.st[n] = th[(cnt[l.kid] = (cnt[l.kid] || 0) + 1) % th.length]; }
+    if (d < d0) t.auf.push({ t: j % 2 ? "Hefte 7a einsammeln" : "Kopien für 9b machen", done: true });
+    st.tage[d] = t;
+  });
+  st.tage[d0].auf = [{ t: "Arbeitsblatt Prozentrechnung kopieren", done: false }, { t: "Elternbriefe Wandertag einsammeln", done: false }, { t: "Raum Ph 1 aufschließen lassen", done: true }];
+  st.tage[d0].notiz = "Nach der 6. Stunde Fachkonferenz Mathematik, Raum 112.";
+  const prev = SCHOOLDAYS[Math.max(0, i0 - 1)], prev2 = SCHOOLDAYS[Math.max(0, i0 - 3)];
+  a.fehl[d0] = { k7as3: "e", k7as1: "u", k7as5: "v" };
+  a.fehl[prev] = { k7as3: "e" };
+  b.fehl[d0] = { k9bs2: "e" };
+  c.fehl[prev2] = { k5cs6: "e", k5cs0: "v" };
+  st.check.start1 = Object.fromEntries([0, 1, 2, 3, 5, 6, 7].map(i => [i, true]));
   return st;
 }
 function load() {
@@ -405,7 +435,8 @@ function confirmBtn(key, label, action, attrs = "", cls = "btn danger") {
 function banner() {
   let h = "";
   if (!storageOk) h += `<div class="note"><p><b>Speichern klappt gerade nicht.</b> Der Browser blockiert den Speicher (z.&nbsp;B. privates Fenster). Änderungen gehen beim Schließen verloren.</p></div>`;
-  if (S.beispiel) h += `<div class="note"><p><b>Beispieldaten.</b> Klassen, Namen und Noten sind ausgedacht, damit du siehst, wie es aussieht.</p>${confirmBtn("reset", "Leer starten", "reset", "", "btn")}</div>`;
+  if (DEMO) h += `<div class="note"><p><b>Demo mit Beispieldaten.</b> Hier kannst du alles ausprobieren. Deine echten Daten bleiben davon unberührt.</p>${confirmBtn("reset", "Demo zurücksetzen", "reset", "", "btn")}</div>`;
+  else if (S.beispiel) h += `<div class="note"><p><b>Beispieldaten.</b> Klassen, Namen und Noten sind ausgedacht, damit du siehst, wie es aussieht.</p>${confirmBtn("reset", "Leer starten", "reset", "", "btn")}</div>`;
   return h;
 }
 
@@ -890,7 +921,8 @@ function renderSync(back) {
   const head = `<div class="head"><div>${back}<h1>Geräte abgleichen</h1><div class="sub">PC, Tablet und Handy mit demselben Stand</div></div></div>`;
   const intro = `<section class="card"><h2>So funktioniert es</h2><p style="margin:0">Jedes Gerät speichert alles bei sich und funktioniert auch ohne Internet. Sobald Netz da ist, gleicht es sich über deine Dropbox ab. Dort liegt nur eine verschlüsselte Datei, die ohne dein Passwort niemand lesen kann, auch Dropbox nicht.</p></section>`;
   let body;
-  if (framed) body = `<p style="margin:0">In dieser Vorschau geht der Abgleich nicht. Öffne die App über ihre eigene Adresse oder vom Startbildschirm.</p>`;
+  if (DEMO) body = `<p style="margin:0">In der Demo gibt es keinen Abgleich. Öffne dafür die normale Adresse ohne „?demo“.</p>`;
+  else if (framed) body = `<p style="margin:0">In dieser Vorschau geht der Abgleich nicht. Öffne die App über ihre eigene Adresse oder vom Startbildschirm.</p>`;
   else if (!appKey()) body = `<h2>Dropbox-App-Schlüssel</h2><form class="form" data-f="dbx-key"><label>App-Key aus der Dropbox-App-Konsole<input type="text" id="dbx-key" autocomplete="off" spellcheck="false"></label><div><button class="btn primary" type="submit">Speichern</button></div></form>`;
   else if (!SY.refresh) body = `<h2>Schritt 1: Dropbox verbinden</h2><p>Die App bekommt nur Zugriff auf ihren eigenen Ordner in deiner Dropbox, sonst auf nichts.</p><button class="btn primary" data-a="dbx-login">Mit Dropbox verbinden</button>`;
   else if (!SY.k) {
@@ -966,7 +998,7 @@ document.addEventListener("click", e => {
     case "dbx-recheck": UI.remote = null; rerender(); break;
     case "sync-now": SYNC.state = "run"; rerender(); sync(); break;
     case "dbx-off": SY = { appKey: SY.appKey }; persistSync(); UI.remote = null; SYNC.state = "idle"; toast("Abgleich auf diesem Gerät beendet"); rerender(); break;
-    case "reset": S = blank(); UI.confirm = null; UI.kid = null; save(); toast("Neu begonnen"); render(); break;
+    case "reset": S = DEMO ? sample() : blank(); UI.confirm = null; UI.kid = null; save(); toast("Neu begonnen"); render(); break;
   }
 });
 
@@ -1014,7 +1046,8 @@ if (q0.get("code") || q0.get("error")) {
 }
 const h0 = (location.hash || "").slice(1);
 if (VIEWS.some(v => v[0] === h0) && !UI.mehr) UI.view = h0;
+if (DEMO && status(UI.sel)[0] !== "schule") UI.sel = UI.anwDate = demoDay();
 render();
-syncSoon(500);
+if (!DEMO) syncSoon(500);
 if ("serviceWorker" in navigator && window.self === window.top && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
