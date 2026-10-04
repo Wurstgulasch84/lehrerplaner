@@ -101,6 +101,8 @@ input.inline:hover,textarea.inline:hover{border-color:var(--line)}
 .lesson .n small{display:block;font-family:var(--f-body);font-weight:400;font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .lesson .what{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
 .lesson .what strong{font-size:1.02rem}
+.absent{display:grid;gap:2px;font-size:.88rem;margin-top:4px;padding:6px 10px;border-radius:8px;background:var(--feier);color:var(--feier-t)}
+.absent .ab-v{color:var(--frei-t)}
 .lesson.empty{opacity:.55;padding-block:6px}
 .lesson textarea{min-height:52px;margin-top:4px}
 .tasks{list-style:none;margin:0;padding:0;display:grid;gap:2px}
@@ -422,6 +424,12 @@ function banner() {
 
 function klName(kid) { const k = S.klassen[kid]; return k ? k.name : ""; }
 function kc(kid) { const k = S.klassen[kid], c = k && FARBE[k.farbe]; return c ? ` kc" style="--kc:${c}` : ""; }
+function absent(kid, d) {
+  const k = S.klassen[kid], f = k && k.fehl[d]; if (!f) return "";
+  const grp = c => k.sOrder.filter(sid => f[sid] === c).map(sid => esc(k.s[sid].name || "ohne Namen")).join(", ");
+  const out = [["e", "Fehlt entschuldigt"], ["u", "Fehlt unentschuldigt"], ["v", "Verspätet"]].map(([c, l]) => { const n = grp(c); return n ? `<span class="ab-${c}"><b>${l}:</b> ${n}</span>` : ""; }).filter(Boolean);
+  return out.length ? `<div class="absent">${out.join("")}</div>` : "";
+}
 function lessonOf(s, n) { return S.plan[wd(s) + "-" + n]; }
 
 /* ---------------------------------------------------------- Tag */
@@ -452,7 +460,7 @@ function renderHeute() {
       }
       rows += `<div class="lesson${kc(e.kid)}"><div class="n">${n}.${tm}</div><div>
         <div class="what"><strong>${esc(klName(e.kid))} ${esc(e.fach)}</strong><span class="muted">Raum ${esc(e.raum || "–")}</span>
-        ${e.kid && S.klassen[e.kid] ? `<button class="btn quiet" data-a="anw" data-k="${e.kid}">Anwesenheit</button>` : ""}</div>
+        ${e.kid && S.klassen[e.kid] ? `<button class="btn quiet" data-a="anw" data-k="${e.kid}">Anwesenheit</button>` : ""}</div>${absent(e.kid, d)}
         <textarea id="st-${n}" class="inline" data-p="tage|${d}|st|${n}" placeholder="Thema, Hausaufgabe, Notiz">${esc(t.st && t.st[n])}</textarea></div></div>`;
     }
     left = `<section class="card"><h2>Stunden</h2>${any ? `<div class="lessons">${rows}</div>` :
