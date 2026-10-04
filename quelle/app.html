@@ -266,6 +266,12 @@ function nextBreak(s) {
 }
 
 /* ---------------------------------------------------------- Daten */
+/* Hell/Dunkel gilt je Gerät; Standard ist hell */
+const THEME_KEY = "lehrerplaner.theme";
+function theme() { try { return localStorage.getItem(THEME_KEY) || "light"; } catch (e) { return "light"; } }
+function applyTheme() { const t = theme(); if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; }
+function setTheme(t) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} applyTheme(); }
+applyTheme();
 const DEMO = new URLSearchParams(location.search).has("demo");
 const KEY = "lehrerplaner.sachsen.v1" + (DEMO ? ".demo" : "");
 const ZEITEN = [["07:30", "08:15"], ["08:25", "09:10"], ["09:30", "10:15"], ["10:25", "11:10"], ["11:30", "12:15"], ["12:25", "13:10"], ["13:20", "14:05"], ["14:15", "15:00"]];
@@ -690,7 +696,8 @@ function renderMehr() {
       <section class="card"><h2>Neu beginnen</h2><p class="muted">Löscht alle Einträge auf diesem Gerät${syncReady() ? " und auch auf deinen abgeglichenen Geräten" : ""}.</p>${confirmBtn("reset", "Alles löschen", "reset")}</section></div>`;
   }
   UI.mehr = null;
-  return `<div class="head"><div><h1>Mehr</h1></div></div><div class="menu">` +
+  return `<div class="head"><div><h1>Mehr</h1></div></div>
+    <section class="card" style="margin-bottom:12px"><h2>Darstellung</h2><div class="chips" style="margin:0">${[["light", "Hell"], ["dark", "Dunkel"], ["auto", "Wie das Gerät"]].map(([t, l]) => `<button aria-pressed="${theme() === t}" data-a="theme" data-t="${t}">${l}</button>`).join("")}</div></section><div class="menu">` +
     MEHR.map(([k, t, s]) => `<button class="card" data-a="mehr" data-m="${k}"><span><b>${t}</b><small>${k === "sync" ? esc(syncLabel()) : s}</small></span><span aria-hidden="true">›</span></button>`).join("") + "</div>";
 }
 
@@ -968,6 +975,7 @@ document.addEventListener("click", e => {
     case "anw": UI.kid = b.dataset.k; UI.ktab = "anw"; UI.anwDate = UI.sel; go("klassen"); break;
     case "auf-del": day(UI.sel).auf.splice(+b.dataset.i, 1); save(); rerender(); break;
     case "kl": UI.kid = b.dataset.k || null; UI.ktab = "schueler"; go("klassen"); break;
+    case "theme": setTheme(b.dataset.t); rerender(); break;
     case "ktab": UI.ktab = b.dataset.t; rerender(); break;
     case "kfarbe": if (FARBE[b.dataset.c]) { k.farbe = b.dataset.c; save(); rerender(); } break;
     case "ask": UI.confirm = b.dataset.q; rerender(); break;
