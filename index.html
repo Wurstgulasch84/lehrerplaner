@@ -134,14 +134,18 @@ input.inline:hover,textarea.inline:hover{border-color:var(--line)}
 .cal td button.s-wochenende{background:var(--we);color:var(--muted)}
 .cal td button.today{box-shadow:inset 0 0 0 2px var(--accent);font-weight:700}
 .cal td button.has::after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent)}
-.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--line)}
-.tabs button{border:0;background:none;padding:9px 12px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;white-space:nowrap;border:0;background:none;padding:9px 12px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
 .tabs button[aria-selected="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--accent)}
 .list{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
 .kcard{text-align:left;cursor:pointer;display:grid;gap:4px}
 .kc{border-left:5px solid var(--kc,transparent)}
 .kcard.kc{padding-left:14px}
-.lesson.kc{padding-left:10px;margin-left:-15px}
+.lesson.kc{padding-left:10px;padding-right:10px;margin-inline:-15px;background:color-mix(in srgb,var(--kc) 6%,transparent)}
+.lesson .what .btn.quiet{margin-left:auto;padding:4px 6px;min-height:0;font-size:.9rem}
+.kcard.kc b{color:var(--kc)}
+.absent.short{display:block}
 .wl.kc{padding-left:6px;border-left-width:4px}
 .kdot{display:inline-block;width:.7em;height:.7em;border-radius:50%;background:var(--kc);margin-right:6px;vertical-align:.05em}
 .swatches{display:flex;flex-wrap:wrap;gap:8px}
@@ -461,8 +465,9 @@ function banner() {
 
 function klName(kid) { const k = S.klassen[kid]; return k ? k.name : ""; }
 function kc(kid) { const k = S.klassen[kid], c = k && FARBE[k.farbe]; return c ? ` kc" style="--kc:${c}` : ""; }
-function absent(kid, d) {
+function absent(kid, d, short) {
   const k = S.klassen[kid], f = k && k.fehl[d]; if (!f) return "";
+  if (short) { const n = k.sOrder.filter(sid => f[sid] === "e" || f[sid] === "u").map(sid => esc(k.s[sid].name || "ohne Namen")); return n.length ? `<div class="absent short"><b>Fehlt:</b> ${n.join(", ")}</div>` : ""; }
   const grp = c => k.sOrder.filter(sid => f[sid] === c).map(sid => esc(k.s[sid].name || "ohne Namen")).join(", ");
   const out = [["e", "Fehlt entschuldigt"], ["u", "Fehlt unentschuldigt"], ["v", "Verspätet"]].map(([c, l]) => { const n = grp(c); return n ? `<span class="ab-${c}"><b>${l}:</b> ${n}</span>` : ""; }).filter(Boolean);
   return out.length ? `<div class="absent">${out.join("")}</div>` : "";
@@ -488,6 +493,7 @@ function renderHeute() {
   if (st === "schule") {
     const any = Object.keys(S.plan).length > 0;
     let rows = "";
+    const seen = new Set();
     for (let n = 1; n <= 8; n++) {
       const e = lessonOf(d, n), z = S.zeiten[n - 1] || ["", ""];
       const tm = `<small>${esc(z[0])}</small>`;
@@ -497,8 +503,9 @@ function renderHeute() {
       }
       rows += `<div class="lesson${kc(e.kid)}"><div class="n">${n}.${tm}</div><div>
         <div class="what"><strong>${esc(klName(e.kid))} ${esc(e.fach)}</strong><span class="muted">Raum ${esc(e.raum || "–")}</span>
-        ${e.kid && S.klassen[e.kid] ? `<button class="btn quiet" data-a="anw" data-k="${e.kid}">Anwesenheit</button>` : ""}</div>${absent(e.kid, d)}
+        ${e.kid && S.klassen[e.kid] ? `<button class="btn quiet" data-a="anw" data-k="${e.kid}">Anwesenheit</button>` : ""}</div>${absent(e.kid, d, seen.has(e.kid))}
         <textarea id="st-${n}" class="inline" data-p="tage|${d}|st|${n}" placeholder="Thema, Hausaufgabe, Notiz">${esc(t.st && t.st[n])}</textarea></div></div>`;
+      if (e.kid) seen.add(e.kid);
     }
     left = `<section class="card"><h2>Stunden</h2>${any ? `<div class="lessons">${rows}</div>` :
       `<p class="muted">Noch kein Stundenplan eingetragen. Dann erscheinen hier jeden Tag automatisch deine Stunden.</p><button class="btn primary" data-a="mehr" data-m="plan">Stundenplan eintragen</button>`}</section>`;
